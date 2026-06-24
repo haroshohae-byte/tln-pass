@@ -2,21 +2,18 @@ import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
 type Partner = {
   id: string;
+  slug: string | null;
   business_name: string;
   category: string;
   address: string | null;
-  phone: string | null;
-  website: string | null;
-  instagram: string | null;
   opening_hours: string | null;
   offer: string | null;
-  rules: string | null;
   description: string | null;
   image_url: string | null;
   status: string;
 };
 
-const categories = [
+const emptyCategories = [
   "Restaurants",
   "Cafes",
   "Entertainment",
@@ -46,12 +43,12 @@ export default async function PartnersPage() {
         </p>
 
         <h1 className="mt-4 max-w-5xl text-6xl font-black tracking-tight md:text-8xl">
-          Selected Tallinn partners.
+          Discover Tallinn.
         </h1>
 
         <p className="mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
-          Approved restaurants, cafes and local businesses will appear here
-          after confirmation in the admin panel.
+          Open a partner card, explore the offer, check the menu and use your
+          TLN Pass benefit on the spot.
         </p>
 
         <div className="mt-12 flex flex-col gap-4 sm:flex-row">
@@ -71,83 +68,79 @@ export default async function PartnersPage() {
         </div>
 
         {approvedPartners.length > 0 ? (
-          <div className="mt-16 grid gap-6 md:grid-cols-3">
-            {approvedPartners.map((partner) => (
-              <div
-                key={partner.id}
-                className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] transition hover:-translate-y-1 hover:bg-white/[0.07]"
-              >
-                {partner.image_url ? (
-                  <img
-                    src={partner.image_url}
-                    alt={partner.business_name}
-                    className="h-60 w-full object-cover"
-                  />
-                ) : (
-                  <div className="h-60 bg-gradient-to-br from-zinc-600 via-zinc-900 to-black" />
-                )}
+          <div className="mt-16 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {approvedPartners.map((partner) => {
+              const partnerUrl = `/partners/${partner.slug || partner.id}`;
 
-                <div className="p-6">
-                  <div className="mb-4 inline-flex rounded-full bg-emerald-400/10 px-4 py-2 text-sm font-black text-emerald-300">
-                    {partner.offer || "Member offer"}
+              return (
+                <a
+                  key={partner.id}
+                  href={partnerUrl}
+                  className="group overflow-hidden rounded-[2.2rem] border border-white/10 bg-white/[0.04] transition duration-300 hover:-translate-y-2 hover:border-white/20 hover:bg-white/[0.08]"
+                >
+                  <div className="relative h-64 overflow-hidden bg-zinc-900">
+                    {partner.image_url ? (
+                      <img
+                        src={partner.image_url}
+                        alt={partner.business_name}
+                        className="h-full w-full object-cover transition duration-700 group-hover:scale-110"
+                      />
+                    ) : (
+                      <div className="h-full w-full bg-gradient-to-br from-zinc-500 via-zinc-900 to-black" />
+                    )}
+
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
+
+                    <div className="absolute left-5 top-5 rounded-full bg-black/70 px-4 py-2 text-xs font-black uppercase tracking-[0.18em] text-white backdrop-blur-xl">
+                      {partner.category}
+                    </div>
+
+                    <div className="absolute bottom-5 left-5 right-5">
+                      <div className="inline-flex rounded-full bg-emerald-400 px-4 py-2 text-sm font-black text-black">
+                        {partner.offer || "TLN Pass offer"}
+                      </div>
+                    </div>
                   </div>
 
-                  <h2 className="text-2xl font-black">
-                    {partner.business_name}
-                  </h2>
+                  <div className="p-6">
+                    <h2 className="text-3xl font-black tracking-tight">
+                      {partner.business_name}
+                    </h2>
 
-                  <p className="mt-2 text-sm font-bold text-zinc-500">
-                    {partner.category}
-                  </p>
+                    {partner.address && (
+                      <p className="mt-3 text-sm text-zinc-500">
+                        {partner.address}
+                      </p>
+                    )}
 
-                  {partner.address && (
-                    <p className="mt-3 text-sm text-zinc-500">
-                      {partner.address}
+                    <p className="mt-5 line-clamp-3 leading-7 text-zinc-400">
+                      {partner.description ||
+                        "Approved TLN Pass partner in Tallinn."}
                     </p>
-                  )}
 
-                  <p className="mt-4 leading-7 text-zinc-400">
-                    {partner.description ||
-                      "Approved TLN Pass partner in Tallinn."}
-                  </p>
+                    <div className="mt-7 flex items-center justify-between">
+                      <div>
+                        <p className="text-sm font-black text-white">
+                          View partner
+                        </p>
+                        <p className="mt-1 text-xs text-zinc-600">
+                          Offer, menu, details
+                        </p>
+                      </div>
 
-                  <div className="mt-6 space-y-2 text-sm text-zinc-500">
-                    {partner.opening_hours && (
-                      <p>Hours: {partner.opening_hours}</p>
-                    )}
-                    {partner.rules && <p>Rules: {partner.rules}</p>}
-                    {partner.phone && <p>Phone: {partner.phone}</p>}
+                      <span className="rounded-full bg-white px-5 py-3 text-sm font-black text-black transition group-hover:scale-105">
+                        Open
+                      </span>
+                    </div>
                   </div>
-
-                  <div className="mt-6 flex flex-wrap gap-3">
-                    {partner.website && (
-                      <a
-                        href={partner.website}
-                        target="_blank"
-                        className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white hover:text-black"
-                      >
-                        Website
-                      </a>
-                    )}
-
-                    {partner.instagram && (
-                      <a
-                        href={partner.instagram}
-                        target="_blank"
-                        className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white hover:text-black"
-                      >
-                        Instagram
-                      </a>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
+                </a>
+              );
+            })}
           </div>
         ) : (
           <>
             <div className="mt-16 grid gap-6 md:grid-cols-3">
-              {categories.map((category, index) => (
+              {emptyCategories.map((category, index) => (
                 <div
                   key={category}
                   className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-7"
@@ -167,6 +160,7 @@ export default async function PartnersPage() {
               <h2 className="text-4xl font-black md:text-6xl">
                 Want your business here?
               </h2>
+
               <p className="mt-6 max-w-2xl text-lg leading-8 text-black/60">
                 Restaurants, cafes and local businesses can apply to join TLN
                 Pass. Approved partners will appear on this page.
