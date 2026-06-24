@@ -1,11 +1,28 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { stripe } from "../../lib/stripe";
 
-function getBaseUrl() {
-  return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(
-    /\/$/,
-    ""
-  );
+async function getBaseUrl() {
+  const headersList = await headers();
+  const host = headersList.get("host");
+
+  if (!host) {
+    return (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000").replace(
+      /\/$/,
+      ""
+    );
+  }
+
+  const isLocal =
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.startsWith("192.168.") ||
+    host.startsWith("10.") ||
+    host.startsWith("172.");
+
+  const protocol = isLocal ? "http" : "https";
+
+  return `${protocol}://${host}`;
 }
 
 async function startCheckout(formData: FormData) {
@@ -24,7 +41,7 @@ async function startCheckout(formData: FormData) {
     throw new Error("Name and email are required");
   }
 
-  const baseUrl = getBaseUrl();
+  const baseUrl = await getBaseUrl();
 
   const session = await stripe.checkout.sessions.create({
     mode: "subscription",
@@ -92,7 +109,7 @@ export default function JoinPage() {
 
           <p className="mt-4 text-zinc-400">
             You will be redirected to Stripe Checkout. In test mode, use Stripe
-            test card details.
+            test payment details.
           </p>
 
           <form action={startCheckout} className="mt-8 space-y-5">

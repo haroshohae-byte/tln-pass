@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import { stripe } from "../../../lib/stripe";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
@@ -14,12 +15,36 @@ function createPassCode() {
     .toUpperCase()}`;
 }
 
+async function getSafeBaseUrl() {
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+
+  const envUrl = (process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000")
+    .replace(/\/$/, "");
+
+  if (!host || host.startsWith("0.0.0.0")) {
+    return envUrl;
+  }
+
+  const isLocal =
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.startsWith("192.168.") ||
+    host.startsWith("10.") ||
+    host.startsWith("172.");
+
+  const protocol = isLocal ? "http" : "https";
+
+  return `${protocol}://${host}`;
+}
+
 export default async function CheckoutSuccessPage({
   searchParams,
 }: {
   searchParams: Promise<{ session_id?: string }>;
 }) {
   const { session_id } = await searchParams;
+  const baseUrl = await getSafeBaseUrl();
 
   if (!session_id) {
     return (
@@ -144,6 +169,8 @@ export default async function CheckoutSuccessPage({
     passCode = (createdPass as MemberPass).pass_code;
   }
 
+  const accountStartUrl = `${baseUrl}/account/start/${passCode}`;
+
   return (
     <main className="min-h-screen bg-black px-6 py-24 text-white">
       <section className="mx-auto max-w-4xl text-center">
@@ -180,7 +207,7 @@ export default async function CheckoutSuccessPage({
         </div>
 
         <a
-          href={`/account/start/${passCode}`}
+          href={accountStartUrl}
           className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
         >
           Open my TLN Pass

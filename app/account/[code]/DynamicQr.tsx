@@ -12,27 +12,40 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
   const [qr, setQr] = useState<QrState | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
 
   async function loadQr() {
-    setError("");
+    try {
+      setError("");
+      setLoading(true);
 
-    const response = await fetch("/api/member-qr", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ pass_code: passCode }),
-    });
+      const response = await fetch("/api/member-qr", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ pass_code: passCode }),
+      });
 
-    const data = await response.json();
+      const data = await response.json();
 
-    if (!response.ok) {
-      setError(data.error || "Could not generate QR");
+      if (!response.ok) {
+        setError(data.error || "Could not generate QR");
+        setQr(null);
+        setLoading(false);
+        return;
+      }
+
+      setQr(data);
+      setLoading(false);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "QR request failed";
+
+      setError(message);
       setQr(null);
-      return;
+      setLoading(false);
     }
-
-    setQr(data);
   }
 
   useEffect(() => {
@@ -65,8 +78,17 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
 
   if (error) {
     return (
-      <div className="rounded-[2rem] border border-red-400/20 bg-red-400/10 p-6 text-red-300">
-        {error}
+      <div className="rounded-[3rem] border border-red-400/20 bg-red-400/10 p-8 text-red-300">
+        <h2 className="text-3xl font-black">QR error</h2>
+
+        <p className="mt-4 leading-7">{error}</p>
+
+        <button
+          onClick={loadQr}
+          className="mt-6 rounded-full bg-red-300 px-6 py-3 font-black text-black"
+        >
+          Try again
+        </button>
       </div>
     );
   }
@@ -96,7 +118,7 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
             />
           ) : (
             <div className="flex h-80 items-center justify-center text-black/40">
-              Loading QR...
+              {loading ? "Loading QR..." : "QR not available"}
             </div>
           )}
         </div>
@@ -104,6 +126,12 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
         <p className="mt-5 text-center text-sm font-bold text-black/45">
           QR refreshes automatically. Screenshots expire quickly.
         </p>
+
+        {qr?.verifyUrl && (
+          <p className="mt-3 break-all text-center text-xs text-black/35">
+            {qr.verifyUrl}
+          </p>
+        )}
       </div>
     </div>
   );
