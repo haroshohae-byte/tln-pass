@@ -5,7 +5,12 @@ type Partner = {
   business_name: string;
   category: string;
   address: string | null;
+  phone: string | null;
+  website: string | null;
+  instagram: string | null;
+  opening_hours: string | null;
   offer: string | null;
+  rules: string | null;
   description: string | null;
   image_url: string | null;
   status: string;
@@ -46,7 +51,7 @@ export default async function PartnersPage() {
 
         <p className="mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
           Approved restaurants, cafes and local businesses will appear here
-          after your confirmation in the admin panel.
+          after confirmation in the admin panel.
         </p>
 
         <div className="mt-12 flex flex-col gap-4 sm:flex-row">
@@ -72,7 +77,15 @@ export default async function PartnersPage() {
                 key={partner.id}
                 className="overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.04] transition hover:-translate-y-1 hover:bg-white/[0.07]"
               >
-                <div className="h-56 bg-gradient-to-br from-zinc-600 via-zinc-900 to-black" />
+                {partner.image_url ? (
+                  <img
+                    src={partner.image_url}
+                    alt={partner.business_name}
+                    className="h-60 w-full object-cover"
+                  />
+                ) : (
+                  <div className="h-60 bg-gradient-to-br from-zinc-600 via-zinc-900 to-black" />
+                )}
 
                 <div className="p-6">
                   <div className="mb-4 inline-flex rounded-full bg-emerald-400/10 px-4 py-2 text-sm font-black text-emerald-300">
@@ -88,7 +101,7 @@ export default async function PartnersPage() {
                   </p>
 
                   {partner.address && (
-                    <p className="mt-2 text-sm text-zinc-600">
+                    <p className="mt-3 text-sm text-zinc-500">
                       {partner.address}
                     </p>
                   )}
@@ -97,6 +110,36 @@ export default async function PartnersPage() {
                     {partner.description ||
                       "Approved TLN Pass partner in Tallinn."}
                   </p>
+
+                  <div className="mt-6 space-y-2 text-sm text-zinc-500">
+                    {partner.opening_hours && (
+                      <p>Hours: {partner.opening_hours}</p>
+                    )}
+                    {partner.rules && <p>Rules: {partner.rules}</p>}
+                    {partner.phone && <p>Phone: {partner.phone}</p>}
+                  </div>
+
+                  <div className="mt-6 flex flex-wrap gap-3">
+                    {partner.website && (
+                      <a
+                        href={partner.website}
+                        target="_blank"
+                        className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white hover:text-black"
+                      >
+                        Website
+                      </a>
+                    )}
+
+                    {partner.instagram && (
+                      <a
+                        href={partner.instagram}
+                        target="_blank"
+                        className="rounded-full border border-white/10 px-4 py-2 text-sm font-bold text-white hover:bg-white hover:text-black"
+                      >
+                        Instagram
+                      </a>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}

@@ -7,6 +7,10 @@ async function submitPartnerApplication(formData: FormData) {
   const business_name = String(formData.get("business_name") || "").trim();
   const category = String(formData.get("category") || "").trim();
   const address = String(formData.get("address") || "").trim();
+  const phone = String(formData.get("phone") || "").trim();
+  const website = String(formData.get("website") || "").trim();
+  const instagram = String(formData.get("instagram") || "").trim();
+  const opening_hours = String(formData.get("opening_hours") || "").trim();
   const offer = String(formData.get("offer") || "").trim();
   const contact_email = String(formData.get("contact_email") || "").trim();
   const description = String(formData.get("description") || "").trim();
@@ -19,6 +23,10 @@ async function submitPartnerApplication(formData: FormData) {
     business_name,
     category,
     address,
+    phone,
+    website,
+    instagram,
+    opening_hours,
     offer,
     contact_email,
     description,
@@ -51,14 +59,14 @@ export default function ApplyPage() {
           </p>
 
           <div className="mt-12 rounded-[3rem] border border-white/10 bg-white/[0.04] p-8">
-            <h2 className="text-3xl font-black">How approval will work</h2>
+            <h2 className="text-3xl font-black">How approval works</h2>
 
             <div className="mt-8 space-y-5">
               {[
                 "Business sends application",
                 "TLN Pass reviews the place and offer",
                 "Admin approves or rejects the application",
-                "Approved partner gets access to manage their card",
+                "Approved partner receives a private edit link",
               ].map((item, index) => (
                 <div key={item} className="flex gap-4">
                   <p className="font-black text-zinc-600">0{index + 1}</p>
@@ -96,6 +104,34 @@ export default function ApplyPage() {
               name="address"
               type="text"
               placeholder="Address in Tallinn"
+              className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
+            />
+
+            <input
+              name="phone"
+              type="text"
+              placeholder="Phone"
+              className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
+            />
+
+            <input
+              name="website"
+              type="text"
+              placeholder="Website"
+              className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
+            />
+
+            <input
+              name="instagram"
+              type="text"
+              placeholder="Instagram"
+              className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
+            />
+
+            <input
+              name="opening_hours"
+              type="text"
+              placeholder="Opening hours: Mon-Fri 12:00-22:00"
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
