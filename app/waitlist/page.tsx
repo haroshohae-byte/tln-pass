@@ -1,3 +1,30 @@
+import { redirect } from "next/navigation";
+import { supabase } from "../../lib/supabase";
+
+async function joinWaitlist(formData: FormData) {
+  "use server";
+
+  const name = String(formData.get("name") || "").trim();
+  const email = String(formData.get("email") || "").trim();
+  const interest = String(formData.get("interest") || "").trim();
+
+  if (!name || !email) {
+    throw new Error("Name and email are required");
+  }
+
+  const { error } = await supabase.from("waitlist").insert({
+    name,
+    email,
+    interest,
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  redirect("/waitlist/success");
+}
+
 export default function WaitlistPage() {
   return (
     <main className="min-h-screen bg-black px-6 py-24 text-white">
@@ -37,17 +64,18 @@ export default function WaitlistPage() {
         <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
           <h2 className="text-4xl font-black">Join waitlist</h2>
           <p className="mt-4 text-zinc-400">
-            This form is ready visually. Next step: connect it to Supabase so
-            entries are saved into your database.
+            Leave your details and we will notify you when TLN Pass launches.
           </p>
 
-          <form className="mt-8 space-y-5">
+          <form action={joinWaitlist} className="mt-8 space-y-5">
             <div>
               <label className="mb-2 block text-sm font-bold text-zinc-400">
                 Name
               </label>
               <input
+                name="name"
                 type="text"
+                required
                 placeholder="Your name"
                 className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
               />
@@ -58,7 +86,9 @@ export default function WaitlistPage() {
                 Email
               </label>
               <input
+                name="email"
                 type="email"
+                required
                 placeholder="your@email.com"
                 className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
               />
@@ -68,7 +98,10 @@ export default function WaitlistPage() {
               <label className="mb-2 block text-sm font-bold text-zinc-400">
                 What are you interested in?
               </label>
-              <select className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none focus:border-white/30">
+              <select
+                name="interest"
+                className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none focus:border-white/30"
+              >
                 <option>Restaurants</option>
                 <option>Cafes</option>
                 <option>Entertainment</option>
@@ -79,7 +112,7 @@ export default function WaitlistPage() {
             </div>
 
             <button
-              type="button"
+              type="submit"
               className="w-full rounded-full bg-white px-8 py-5 font-black text-black transition hover:scale-[1.02] hover:bg-zinc-200"
             >
               Join waitlist

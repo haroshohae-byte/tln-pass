@@ -1,3 +1,37 @@
+import { redirect } from "next/navigation";
+import { supabase } from "../../lib/supabase";
+
+async function submitPartnerApplication(formData: FormData) {
+  "use server";
+
+  const business_name = String(formData.get("business_name") || "").trim();
+  const category = String(formData.get("category") || "").trim();
+  const address = String(formData.get("address") || "").trim();
+  const offer = String(formData.get("offer") || "").trim();
+  const contact_email = String(formData.get("contact_email") || "").trim();
+  const description = String(formData.get("description") || "").trim();
+
+  if (!business_name || !category || !contact_email) {
+    throw new Error("Business name, category and contact email are required");
+  }
+
+  const { error } = await supabase.from("partner_applications").insert({
+    business_name,
+    category,
+    address,
+    offer,
+    contact_email,
+    description,
+    status: "pending",
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  redirect("/apply/success");
+}
+
 export default function ApplyPage() {
   return (
     <main className="min-h-screen bg-black px-6 py-24 text-white">
@@ -38,48 +72,57 @@ export default function ApplyPage() {
         <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
           <h2 className="text-4xl font-black">Business details</h2>
           <p className="mt-4 text-zinc-400">
-            This form will later send data to your admin panel.
+            Send your business details for review.
           </p>
 
-          <form className="mt-8 space-y-5">
+          <form action={submitPartnerApplication} className="mt-8 space-y-5">
             <input
+              name="business_name"
               type="text"
+              required
               placeholder="Business name"
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+              name="category"
               type="text"
+              required
               placeholder="Category: Restaurant, Cafe, Beauty..."
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+              name="address"
               type="text"
               placeholder="Address in Tallinn"
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+              name="offer"
               type="text"
               placeholder="Offer example: -20% on weekdays"
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+              name="contact_email"
               type="email"
+              required
               placeholder="Contact email"
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <textarea
+              name="description"
               placeholder="Short description of your business"
               rows={6}
               className="w-full resize-none rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <button
-              type="button"
+              type="submit"
               className="w-full rounded-full bg-white px-8 py-5 font-black text-black transition hover:scale-[1.02] hover:bg-zinc-200"
             >
               Send application
