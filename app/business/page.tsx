@@ -1,147 +1,93 @@
-const benefits = [
-  {
-    title: "New local customers",
-    text: "Get discovered by people actively looking for places to visit in Tallinn.",
-  },
-  {
-    title: "No delivery model",
-    text: "Members visit your location directly, order on-site and pay normally.",
-  },
-  {
-    title: "Controlled offers",
-    text: "You decide what offer to provide, when it works and how members use it.",
-  },
-  {
-    title: "Premium positioning",
-    text: "TLN Pass is built to feel clean, selective and trustworthy — not cheap.",
-  },
-];
+import { cookies } from "next/headers";
+import { normalizeLang } from "../../lib/i18n";
 
-const process = [
-  "Submit partner request",
-  "We review your business",
-  "You choose your offer",
-  "Your card goes live",
-];
+const copy = {
+  en: {
+    eyebrow: "For Business",
+    title: "Bring TLN Pass members to your venue.",
+    subtitle:
+      "Restaurants, cafes, bars and local businesses can use TLN Pass to attract members with simple QR-based benefits.",
+    apply: "Apply as partner",
+  },
+  ru: {
+    eyebrow: "Для бизнеса",
+    title: "Приводи участников TLN Pass в своё место.",
+    subtitle:
+      "Рестораны, кафе, бары и локальный бизнес могут привлекать участников через простые QR-привилегии.",
+    apply: "Стать партнёром",
+  },
+  ee: {
+    eyebrow: "Ettevõttele",
+    title: "Too TLN Pass liikmed oma kohta.",
+    subtitle:
+      "Restoranid, kohvikud, baarid ja kohalikud ettevõtted saavad pakkuda QR-põhiseid liikme eeliseid.",
+    apply: "Hakka partneriks",
+  },
+};
 
-export default function BusinessPage() {
+export default async function BusinessPage() {
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = copy[lang];
+
+  const ideas = [
+    "20% off selected menu",
+    "Free dessert for members",
+    "2-for-1 cocktails",
+    "Member-only combo",
+    "Priority booking",
+    "Special event access",
+  ];
+
   return (
-    <main className="min-h-screen overflow-hidden bg-black px-6 py-24 text-white">
-      <section className="mx-auto max-w-7xl">
-        <div className="grid items-center gap-16 lg:grid-cols-2">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-              For businesses
-            </p>
+    <main className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
+      <section className="relative min-h-[640px] overflow-hidden bg-black px-5 py-16 text-white">
+        <img
+          src="/images/membership/monthly.jpg"
+          alt="Restaurant"
+          className="absolute inset-0 h-full w-full object-cover opacity-55"
+        />
 
-            <h1 className="mt-4 max-w-4xl text-6xl font-black tracking-tight md:text-8xl">
-              Bring TLN Pass members to your place.
-            </h1>
+        <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/55 to-black/10" />
 
-            <p className="mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
-              TLN Pass helps restaurants, cafes, entertainment venues and local
-              businesses become part of a premium Tallinn membership network.
-            </p>
-
-            <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-              <a
-                href="/contact"
-                className="rounded-full bg-white px-8 py-4 text-center font-black text-black transition hover:scale-105"
-              >
-                Apply as Partner
-              </a>
-
-              <a
-                href="/partners"
-                className="rounded-full border border-white/15 bg-white/5 px-8 py-4 text-center font-black text-white transition hover:bg-white/10"
-              >
-                View Partner Page
-              </a>
-            </div>
-          </div>
-
-          <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
-            <div className="rounded-[2rem] bg-gradient-to-br from-zinc-100 via-zinc-300 to-zinc-500 p-8 text-black">
-              <p className="text-sm font-bold uppercase tracking-[0.25em] text-black/60">
-                Partner card preview
-              </p>
-
-              <h2 className="mt-8 text-4xl font-black">
-                Your business, offer and rules.
-              </h2>
-
-              <div className="mt-10 space-y-4">
-                <div className="rounded-2xl bg-black/10 p-5">
-                  <p className="text-sm font-bold text-black/60">Offer</p>
-                  <p className="mt-1 text-2xl font-black">−20% for members</p>
-                </div>
-
-                <div className="rounded-2xl bg-black/10 p-5">
-                  <p className="text-sm font-bold text-black/60">Category</p>
-                  <p className="mt-1 text-2xl font-black">Restaurant</p>
-                </div>
-
-                <div className="rounded-2xl bg-black/10 p-5">
-                  <p className="text-sm font-bold text-black/60">Status</p>
-                  <p className="mt-1 text-2xl font-black">Pending approval</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-24 grid gap-6 md:grid-cols-2">
-          {benefits.map((benefit) => (
-            <div
-              key={benefit.title}
-              className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-8 transition hover:-translate-y-1 hover:bg-white/[0.07]"
-            >
-              <h3 className="text-2xl font-black">{benefit.title}</h3>
-              <p className="mt-4 leading-7 text-zinc-400">{benefit.text}</p>
-            </div>
-          ))}
-        </div>
-
-        <div className="mt-24 rounded-[3rem] border border-white/10 bg-gradient-to-br from-white/10 to-white/[0.03] p-10 md:p-14">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-            Partnership process
+        <div className="relative mx-auto flex min-h-[520px] max-w-7xl flex-col justify-end">
+          <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/50">
+            {t.eyebrow}
           </p>
 
-          <h2 className="mt-4 max-w-3xl text-4xl font-black md:text-6xl">
-            Simple now. More powerful later.
-          </h2>
+          <h1 className="mt-5 max-w-5xl text-6xl font-black leading-tight tracking-tight md:text-8xl">
+            {t.title}
+          </h1>
 
-          <div className="mt-12 grid gap-5 md:grid-cols-4">
-            {process.map((item, index) => (
-              <div
-                key={item}
-                className="rounded-[2rem] border border-white/10 bg-black/30 p-6"
-              >
-                <p className="text-4xl font-black text-zinc-700">
-                  0{index + 1}
-                </p>
-                <h3 className="mt-8 text-xl font-black">{item}</h3>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="mt-24 text-center">
-          <h2 className="mx-auto max-w-3xl text-4xl font-black md:text-6xl">
-            Apply to become one of the first TLN Pass partners.
-          </h2>
-
-          <p className="mx-auto mt-6 max-w-2xl text-lg leading-8 text-zinc-400">
-            Later, approved partners will get access to manage their restaurant
-            card through the admin system.
+          <p className="mt-6 max-w-2xl text-xl leading-8 text-white/75">
+            {t.subtitle}
           </p>
 
           <a
-            href="/contact"
-            className="mt-10 inline-flex rounded-full bg-white px-10 py-5 font-black text-black transition hover:scale-105"
+            href="/apply"
+            className="mt-9 w-fit rounded-full bg-white px-8 py-4 font-black text-black"
           >
-            Send Partner Request
+            {t.apply}
           </a>
+        </div>
+      </section>
+
+      <section className="px-5 py-16">
+        <div className="mx-auto max-w-7xl">
+          <h2 className="text-5xl font-black tracking-tight">
+            Offer ideas that work.
+          </h2>
+
+          <div className="mt-8 grid gap-5 md:grid-cols-3">
+            {ideas.map((idea) => (
+              <div
+                key={idea}
+                className="rounded-[2rem] bg-white p-7 shadow-sm ring-1 ring-black/5"
+              >
+                <p className="text-2xl font-black">{idea}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </main>

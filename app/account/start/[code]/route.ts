@@ -68,5 +68,13 @@ export async function GET(
     maxAge: 60 * 60 * 24 * 365,
   });
 
+  response.cookies.set("tln_last_pass_code", code, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: false,
+    path: "/",
+    maxAge: 60 * 60 * 24 * 365,
+  });
+
   return response;
 }

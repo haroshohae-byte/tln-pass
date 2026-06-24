@@ -1,372 +1,251 @@
+import { cookies } from "next/headers";
+import { dictionary, normalizeLang } from "../lib/i18n";
+
+const images = {
+  tallinn:
+    "https://images.unsplash.com/photo-1573156667504-2699f9d6f75b?auto=format&fit=crop&w=2000&q=90",
+  restaurant:
+    "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1400&q=90",
+  cafe:
+    "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=1400&q=90",
+  bar:
+    "https://images.unsplash.com/photo-1572116469696-31de0f17cc34?auto=format&fit=crop&w=1400&q=90",
+  event:
+    "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?auto=format&fit=crop&w=1400&q=90",
+  fitness:
+    "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?auto=format&fit=crop&w=1400&q=90",
+  beauty:
+    "https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?auto=format&fit=crop&w=1400&q=90",
+  dinner:
+    "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1400&q=90",
+};
+
 const categories = [
   {
-    name: "Restaurants",
-    icon: "🍽️",
-    text: "Member-only offers at selected restaurants and food spots.",
+    label: "Restaurants",
+    href: "/partners?category=restaurants",
+    img: images.restaurant,
   },
   {
-    name: "Cafes",
-    icon: "☕",
-    text: "Coffee, brunch, desserts and everyday local favourites.",
+    label: "Cafes",
+    href: "/partners?category=cafes",
+    img: images.cafe,
   },
   {
-    name: "Entertainment",
-    icon: "🎮",
-    text: "Activities, experiences and nights out across Tallinn.",
+    label: "Bars",
+    href: "/partners?category=bars",
+    img: images.bar,
   },
   {
-    name: "Fitness",
-    icon: "💪",
-    text: "Gyms, recovery, wellness and active lifestyle partners.",
+    label: "Entertainment",
+    href: "/partners?category=entertainment",
+    img: images.event,
   },
   {
-    name: "Beauty",
-    icon: "✨",
-    text: "Barbers, salons, grooming and beauty services.",
+    label: "Fitness",
+    href: "/partners?category=fitness",
+    img: images.fitness,
   },
   {
-    name: "Events",
-    icon: "🎟️",
-    text: "Special access, drops and limited-time local offers.",
+    label: "Beauty",
+    href: "/partners?category=beauty",
+    img: images.beauty,
   },
 ];
 
 const steps = [
   {
-    number: "01",
-    title: "Join TLN Pass",
-    text: "Become a member and unlock your digital Tallinn pass.",
+    title: "Choose the place.",
+    text: "Open restaurants, cafes, bars and experiences curated for TLN Pass members.",
+    img: images.cafe,
   },
   {
-    number: "02",
-    title: "Discover places",
-    text: "Browse selected restaurants, cafes, activities and local partners.",
+    title: "Show your pass.",
+    text: "The dynamic QR is made for the moment before you pay.",
+    img: images.dinner,
   },
   {
-    number: "03",
-    title: "Show your QR",
-    text: "Open your digital member card and show it before payment.",
-  },
-  {
-    number: "04",
-    title: "Save instantly",
-    text: "Receive your member offer directly at the location.",
+    title: "Unlock the benefit.",
+    text: "The partner verifies your active membership and applies the available perk.",
+    img: images.restaurant,
   },
 ];
 
-const faq = [
-  {
-    question: "Is TLN Pass already launched?",
-    answer:
-      "TLN Pass is currently in early launch mode. We are preparing the first partner network in Tallinn.",
-  },
-  {
-    question: "Do I need an app?",
-    answer:
-      "At first, TLN Pass will work through a mobile-friendly website with a digital member card and QR code.",
-  },
-  {
-    question: "Can restaurants join?",
-    answer:
-      "Yes. Restaurants, cafes, entertainment venues and local businesses can apply to become partners.",
-  },
-];
+export default async function HomePage() {
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = dictionary[lang].home;
 
-export default function Home() {
   return (
-    <main className="min-h-screen overflow-hidden bg-black text-white">
-      <div className="pointer-events-none fixed inset-0 noise" />
-      <div className="pointer-events-none fixed inset-0">
-        <div className="glow-pulse absolute left-1/2 top-0 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-blue-500/20 blur-[150px]" />
-        <div className="absolute right-[-120px] top-[360px] h-[460px] w-[460px] rounded-full bg-purple-500/20 blur-[140px]" />
-        <div className="absolute bottom-[-120px] left-[-120px] h-[460px] w-[460px] rounded-full bg-amber-500/10 blur-[130px]" />
-      </div>
+    <main className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
+      <section className="relative min-h-[92vh] overflow-hidden bg-black text-white">
+        <img
+          src={images.tallinn}
+          alt="Tallinn"
+          className="absolute inset-0 h-full w-full object-cover opacity-75"
+        />
 
-      <section className="relative z-10 mx-auto grid max-w-7xl items-center gap-16 px-6 pb-24 pt-20 lg:grid-cols-2 lg:pt-28">
-        <div>
-          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-zinc-300 backdrop-blur-xl">
-            <span className="h-2 w-2 rounded-full bg-emerald-400" />
-            Early access · Tallinn, Estonia
-          </div>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/25 to-black/85" />
 
-          <h1 className="max-w-5xl text-6xl font-black tracking-tight text-white md:text-8xl">
-            Your private key
-            <br />
-            <span className="bg-gradient-to-r from-white via-zinc-300 to-zinc-600 bg-clip-text text-transparent">
-              to Tallinn.
-            </span>
+        <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col items-center justify-center px-5 py-20 text-center">
+          <p className="rounded-full bg-white/10 px-5 py-2 text-sm font-bold backdrop-blur-2xl">
+            {t.badge}
+          </p>
+
+          <h1 className="mt-8 max-w-5xl text-6xl font-black leading-[0.98] tracking-tight md:text-8xl lg:text-9xl">
+            Tallinn, unlocked.
           </h1>
 
-          <p className="mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
-            TLN Pass is a premium membership for discovering selected
-            restaurants, cafes, entertainment and local experiences across
-            Tallinn — with exclusive member-only perks.
+          <p className="mt-8 max-w-3xl text-xl font-medium leading-8 text-white/80 md:text-2xl">
+            {t.text}
           </p>
 
           <div className="mt-10 flex flex-col gap-4 sm:flex-row">
             <a
               href="/membership"
-              className="rounded-full bg-white px-8 py-4 text-center font-black text-black transition hover:scale-105 hover:bg-zinc-200"
+              className="rounded-full bg-white px-8 py-4 text-base font-bold text-black transition hover:scale-105"
             >
-              Join waitlist
+              {t.ctaPrimary}
             </a>
 
             <a
-              href="/business"
-              className="rounded-full border border-white/15 bg-white/5 px-8 py-4 text-center font-black text-white backdrop-blur-xl transition hover:border-white/30 hover:bg-white/10"
+              href="/partners"
+              className="rounded-full bg-white/12 px-8 py-4 text-base font-bold text-white ring-1 ring-white/20 backdrop-blur-2xl transition hover:bg-white hover:text-black"
             >
-              Become a Partner
+              {t.ctaSecondary}
             </a>
-          </div>
-
-          <div className="mt-12 grid max-w-xl grid-cols-3 gap-4">
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-              <p className="text-3xl font-black">30+</p>
-              <p className="mt-1 text-sm text-zinc-500">Partner goal</p>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-              <p className="text-3xl font-black">QR</p>
-              <p className="mt-1 text-sm text-zinc-500">Member pass</p>
-            </div>
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-5">
-              <p className="text-3xl font-black">VIP</p>
-              <p className="mt-1 text-sm text-zinc-500">Local perks</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="relative mx-auto w-full max-w-md">
-          <div className="absolute inset-0 rounded-[4rem] bg-gradient-to-br from-blue-500/30 via-purple-500/20 to-amber-500/20 blur-3xl" />
-
-          <div className="float-slow relative rounded-[3.2rem] border border-white/10 bg-zinc-950/80 p-4 shadow-2xl backdrop-blur-2xl">
-            <div className="rounded-[2.7rem] border border-white/10 bg-black p-5">
-              <div className="mb-8 flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-zinc-500">Digital Membership</p>
-                  <p className="text-3xl font-black">TLN Pass</p>
-                </div>
-
-                <div className="rounded-full bg-white px-4 py-2 text-sm font-black text-black">
-                  Active
-                </div>
-              </div>
-
-              <div className="rounded-[2rem] bg-gradient-to-br from-zinc-100 via-zinc-300 to-zinc-500 p-6 text-black">
-                <div className="flex justify-between">
-                  <p className="text-sm font-black uppercase tracking-widest">
-                    Premium
-                  </p>
-                  <p className="text-sm font-black">Tallinn</p>
-                </div>
-
-                <div className="mt-16">
-                  <p className="text-4xl font-black">Member Card</p>
-                  <p className="mt-2 text-sm text-black/60">
-                    Valid at selected partners
-                  </p>
-                </div>
-              </div>
-
-              <div className="mt-5 rounded-[2rem] border border-white/10 bg-white/5 p-5">
-                <div className="mx-auto grid h-40 w-40 grid-cols-5 gap-1 rounded-2xl bg-white p-4">
-                  {Array.from({ length: 25 }).map((_, i) => (
-                    <div
-                      key={i}
-                      className={`rounded-sm ${
-                        [0, 1, 2, 5, 10, 12, 14, 18, 20, 21, 22, 24].includes(i)
-                          ? "bg-black"
-                          : "bg-zinc-300"
-                      }`}
-                    />
-                  ))}
-                </div>
-
-                <p className="mt-4 text-center text-sm text-zinc-400">
-                  Show QR code before payment
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-20">
-        <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-2xl md:p-12">
-          <div className="grid gap-8 md:grid-cols-3">
+      <section className="px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="mx-auto max-w-4xl text-center">
+            <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+              Simple by design
+            </p>
+
+            <h2 className="mt-5 text-5xl font-black leading-tight tracking-tight md:text-7xl">
+              A city guide that works like a pass.
+            </h2>
+
+            <p className="mx-auto mt-6 max-w-2xl text-xl leading-8 text-zinc-600">
+              No messy coupons. No plastic card. Open your phone, choose a place,
+              show the QR and enjoy the member benefit.
+            </p>
+          </div>
+
+          <div className="mt-14 grid gap-6 lg:grid-cols-3">
+            {steps.map((step) => (
+              <article
+                key={step.title}
+                className="overflow-hidden rounded-[2.2rem] bg-white shadow-sm ring-1 ring-black/5"
+              >
+                <img
+                  src={step.img}
+                  alt={step.title}
+                  className="h-72 w-full object-cover"
+                />
+
+                <div className="p-7">
+                  <h3 className="text-3xl font-black tracking-tight">
+                    {step.title}
+                  </h3>
+
+                  <p className="mt-4 text-lg leading-7 text-zinc-600">
+                    {step.text}
+                  </p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-white px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
-              <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-                What it is
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+                Choose your vibe
               </p>
-              <h2 className="mt-4 text-4xl font-black">
-                Not another discount page.
+
+              <h2 className="mt-4 text-5xl font-black tracking-tight md:text-7xl">
+                Pick your mood.
               </h2>
             </div>
 
-            <div className="md:col-span-2">
-              <p className="text-2xl leading-10 text-zinc-300">
-                TLN Pass is designed as a curated city membership — clean,
-                premium and selective. The value comes from strong local
-                partners, simple QR use and a product that feels trustworthy.
+            <p className="max-w-xl text-lg leading-8 text-zinc-600">
+              Jump straight into what you want today: food, coffee, cocktails,
+              events, fitness or beauty.
+            </p>
+          </div>
+
+          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {categories.map((category) => (
+              <a
+                key={category.href}
+                href={category.href}
+                className="group relative h-[360px] overflow-hidden rounded-[2.2rem] bg-black"
+              >
+                <img
+                  src={category.img}
+                  alt={category.label}
+                  className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-700 group-hover:scale-110"
+                />
+
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/15 to-transparent" />
+
+                <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-4 text-white">
+                  <h3 className="text-4xl font-black tracking-tight">
+                    {category.label}
+                  </h3>
+
+                  <span className="rounded-full bg-white px-5 py-3 text-sm font-black text-black">
+                    Open
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-5 py-16 md:py-24">
+        <div className="mx-auto max-w-7xl overflow-hidden rounded-[2.6rem] bg-[#1d1d1f] text-white">
+          <div className="grid min-h-[560px] lg:grid-cols-2">
+            <div className="flex flex-col justify-center p-8 md:p-14">
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/45">
+                Mobile-first
               </p>
-            </div>
-          </div>
-        </div>
-      </section>
 
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-          <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-              Categories
-            </p>
-            <h2 className="mt-3 max-w-3xl text-4xl font-black md:text-6xl">
-              Built around how people actually spend time.
-            </h2>
-          </div>
-
-          <p className="max-w-md text-zinc-400">
-            The partner network will grow carefully. Quality first, quantity
-            after.
-          </p>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-3">
-          {categories.map((category) => (
-            <div
-              key={category.name}
-              className="group rounded-[2rem] border border-white/10 bg-white/[0.04] p-7 backdrop-blur-xl transition hover:-translate-y-1 hover:bg-white/[0.08]"
-            >
-              <div className="mb-8 text-4xl">{category.icon}</div>
-              <h3 className="text-2xl font-black">{category.name}</h3>
-              <p className="mt-3 leading-7 text-zinc-400">{category.text}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section id="how" className="relative z-10 mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-10">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-            How it works
-          </p>
-
-          <h2 className="mt-3 max-w-3xl text-4xl font-black md:text-6xl">
-            Four steps. No friction.
-          </h2>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-4">
-          {steps.map((step) => (
-            <div
-              key={step.number}
-              className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 transition hover:-translate-y-1 hover:bg-white/[0.08]"
-            >
-              <p className="text-sm font-black text-zinc-600">{step.number}</p>
-              <h3 className="mt-8 text-xl font-black">{step.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-zinc-400">
-                {step.text}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-20">
-        <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-10 md:p-12">
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-              For members
-            </p>
-            <h2 className="mt-4 text-4xl font-black md:text-6xl">
-              Discover Tallinn with benefits.
-            </h2>
-            <p className="mt-6 leading-8 text-zinc-400">
-              Members get a digital card, QR access and selected offers from
-              approved partners.
-            </p>
-            <a
-              href="/membership"
-              className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
-            >
-              Join waitlist
-            </a>
-          </div>
-
-          <div className="rounded-[3rem] border border-white/10 bg-gradient-to-br from-white/12 to-white/[0.03] p-10 md:p-12">
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-              For partners
-            </p>
-            <h2 className="mt-4 text-4xl font-black md:text-6xl">
-              Get seen by local customers.
-            </h2>
-            <p className="mt-6 leading-8 text-zinc-400">
-              Restaurants and local businesses can apply to join the first TLN
-              Pass partner network.
-            </p>
-            <a
-              href="/business"
-              className="mt-10 inline-flex rounded-full border border-white/15 bg-white/5 px-8 py-4 font-black text-white transition hover:bg-white hover:text-black"
-            >
-              Become a Partner
-            </a>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-20">
-        <div className="rounded-[3rem] border border-white/10 bg-white p-10 text-black md:p-14">
-          <div className="grid gap-10 lg:grid-cols-2 lg:items-center">
-            <div>
-              <p className="text-sm font-black uppercase tracking-[0.3em] text-black/50">
-                Early access
-              </p>
-              <h2 className="mt-4 text-4xl font-black md:text-6xl">
-                Join before the first partner drop.
+              <h2 className="mt-5 max-w-xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
+                Built for the moment before you pay.
               </h2>
-              <p className="mt-6 text-lg leading-8 text-black/60">
-                We are building the first curated partner network in Tallinn.
-                Join the waitlist or apply as a business partner.
-              </p>
-            </div>
 
-            <div className="flex flex-col gap-4 sm:flex-row lg:justify-end">
+              <p className="mt-6 max-w-xl text-xl leading-8 text-white/65">
+                TLN Pass is made to be used on the phone, at the venue, when it
+                actually matters.
+              </p>
+
               <a
                 href="/membership"
-                className="rounded-full bg-black px-8 py-4 text-center font-black text-white transition hover:scale-105"
+                className="mt-9 w-fit rounded-full bg-white px-8 py-4 font-bold text-black transition hover:scale-105"
               >
-                Join waitlist
+                View membership
               </a>
-              <a
-                href="/contact"
-                className="rounded-full border border-black/10 px-8 py-4 text-center font-black text-black transition hover:bg-black hover:text-white"
-              >
-                Contact us
-              </a>
+            </div>
+
+            <div className="relative min-h-[420px]">
+              <img
+                src={images.bar}
+                alt="Tallinn night out"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+
+              <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="relative z-10 mx-auto max-w-7xl px-6 py-20">
-        <div className="mb-10">
-          <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-            FAQ
-          </p>
-          <h2 className="mt-3 text-4xl font-black md:text-6xl">
-            Clear answers.
-          </h2>
-        </div>
-
-        <div className="grid gap-5 md:grid-cols-3">
-          {faq.map((item) => (
-            <div
-              key={item.question}
-              className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-7"
-            >
-              <h3 className="text-xl font-black">{item.question}</h3>
-              <p className="mt-4 leading-7 text-zinc-400">{item.answer}</p>
-            </div>
-          ))}
         </div>
       </section>
     </main>

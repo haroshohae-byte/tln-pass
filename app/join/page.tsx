@@ -1,5 +1,7 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { dictionary, normalizeLang } from "../../lib/i18n";
+import { getPlanById, getStripePriceId } from "../../lib/plans";
 import { stripe } from "../../lib/stripe";
 
 async function getBaseUrl() {
@@ -30,17 +32,14 @@ async function startCheckout(formData: FormData) {
 
   const fullName = String(formData.get("full_name") || "").trim();
   const email = String(formData.get("email") || "").trim();
-
-  const priceId = process.env.STRIPE_PRICE_ID;
-
-  if (!priceId) {
-    throw new Error("Missing STRIPE_PRICE_ID");
-  }
+  const planId = String(formData.get("plan") || "monthly");
 
   if (!fullName || !email) {
     throw new Error("Name and email are required");
   }
 
+  const plan = getPlanById(planId);
+  const priceId = getStripePriceId(plan.id);
   const baseUrl = await getBaseUrl();
 
   const session = await stripe.checkout.sessions.create({
@@ -53,17 +52,22 @@ async function startCheckout(formData: FormData) {
       },
     ],
     success_url: `${baseUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${baseUrl}/join?canceled=1`,
+    cancel_url: `${baseUrl}/join?plan=${plan.id}&canceled=1`,
     metadata: {
       full_name: fullName,
       email,
+      plan_id: plan.id,
+      plan_name: plan.name,
     },
     subscription_data: {
       metadata: {
         full_name: fullName,
         email,
+        plan_id: plan.id,
+        plan_name: plan.name,
       },
     },
+    allow_promotion_codes: true,
   });
 
   if (!session.url) {
@@ -73,72 +77,94 @@ async function startCheckout(formData: FormData) {
   redirect(session.url);
 }
 
-export default function JoinPage() {
-  return (
-    <main className="min-h-screen bg-black px-6 py-24 text-white">
-      <section className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-2 lg:items-center">
-        <div>
-          <div className="inline-flex rounded-full border border-emerald-400/20 bg-emerald-400/10 px-5 py-3 text-sm font-black text-emerald-300">
-            15€ / month · cancel anytime
-          </div>
+export default async function JoinPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ plan?: string }>;
+}) {
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = dictionary[lang].join;
 
-          <h1 className="mt-8 text-6xl font-black tracking-tight md:text-8xl">
-            Join TLN Pass.
+  const { plan: planParam } = await searchParams;
+  const plan = getPlanById(planParam);
+
+  return (
+    <main className="min-h-screen bg-[#050505] px-5 py-16 text-white">
+      <section className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_480px] lg:items-start">
+        <div className="rounded-[2.8rem] border border-white/10 bg-white/[0.035] p-7 md:p-12">
+          <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
+            {t.badge}
+          </p>
+
+          <h1 className="mt-6 text-6xl font-black tracking-tight md:text-8xl">
+            {t.title}
           </h1>
 
-          <p className="mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
-            One membership for selected Tallinn restaurants, cafes and local
-            experiences. Pay once per month and unlock partner benefits with a
-            secure dynamic QR pass.
+          <p className="mt-7 max-w-2xl text-xl leading-8 text-zinc-400">
+            {t.text}
           </p>
 
-          <div className="mt-10 grid gap-4 sm:grid-cols-3">
-            {["Dynamic QR", "Partner offers", "Monthly access"].map((item) => (
-              <div
-                key={item}
-                className="rounded-3xl border border-white/10 bg-white/[0.04] p-5"
-              >
-                <p className="font-black">{item}</p>
-              </div>
-            ))}
-          </div>
+          <a
+            href="/membership"
+            className="mt-10 inline-flex rounded-full border border-white/10 px-7 py-4 font-black text-white transition hover:bg-white hover:text-black"
+          >
+            {t.changePlan}
+          </a>
         </div>
 
-        <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-8">
-          <h2 className="text-4xl font-black">Start membership</h2>
+        <div className="rounded-[2.8rem] border border-white/10 bg-white p-6 text-black">
+          <div className="rounded-[2.2rem] bg-[#080808] p-6 text-white">
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-zinc-600">
+              {t.selectedPlan}
+            </p>
 
-          <p className="mt-4 text-zinc-400">
-            You will be redirected to Stripe Checkout. In test mode, use Stripe
-            test payment details.
-          </p>
+            <div className="mt-6 flex items-end justify-between gap-5">
+              <div>
+                <h2 className="text-4xl font-black">{plan.name}</h2>
+                <p className="mt-2 font-bold text-zinc-500">{plan.duration}</p>
+              </div>
 
-          <form action={startCheckout} className="mt-8 space-y-5">
+              <div className="text-right">
+                <p className="font-black text-zinc-600 line-through">
+                  {plan.oldPrice}
+                </p>
+                <p className="text-4xl font-black">{plan.price}</p>
+              </div>
+            </div>
+
+            <p className="mt-6 leading-7 text-zinc-400">{plan.note}</p>
+          </div>
+
+          <form action={startCheckout} className="mt-6 space-y-4">
+            <input type="hidden" name="plan" value={plan.id} />
+
             <input
               name="full_name"
               type="text"
               required
-              placeholder="Your name"
-              className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
+              placeholder={t.name}
+              className="w-full rounded-2xl border border-black/10 bg-zinc-100 px-5 py-4 font-bold text-black outline-none placeholder:text-zinc-500 focus:border-black/30"
             />
 
             <input
               name="email"
               type="email"
               required
-              placeholder="Email"
-              className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
+              placeholder={t.email}
+              className="w-full rounded-2xl border border-black/10 bg-zinc-100 px-5 py-4 font-bold text-black outline-none placeholder:text-zinc-500 focus:border-black/30"
             />
 
             <button
               type="submit"
-              className="w-full rounded-full bg-white px-8 py-5 font-black text-black transition hover:scale-[1.02]"
+              className="w-full rounded-full bg-black px-8 py-5 font-black text-white transition hover:scale-[1.02]"
             >
-              Join now — 15€/month
+              {t.button}
             </button>
           </form>
 
-          <p className="mt-5 text-center text-xs text-zinc-600">
-            Test mode now. Real payments later after Stripe live activation.
+          <p className="mt-5 text-center text-xs font-bold text-zinc-500">
+            {t.stripe}
           </p>
         </div>
       </section>

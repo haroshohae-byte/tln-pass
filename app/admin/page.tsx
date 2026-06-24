@@ -19,6 +19,30 @@ type PartnerApplication = {
   created_at: string;
 };
 
+type Partner = {
+  id: string;
+  application_id: string | null;
+  business_name: string;
+  category: string;
+  status: string;
+  edit_token: string | null;
+  slug: string | null;
+  offer: string | null;
+};
+
+type MemberPass = {
+  id: string;
+  full_name: string;
+  email: string;
+  pass_code: string;
+  plan: string;
+  status: string;
+  valid_until: string;
+  stripe_subscription_id: string | null;
+  last_payment_status: string | null;
+  created_at: string;
+};
+
 type WaitlistMember = {
   id: string;
   name: string;
@@ -27,13 +51,12 @@ type WaitlistMember = {
   created_at: string;
 };
 
-type Partner = {
+type UsageLog = {
   id: string;
-  application_id: string | null;
-  business_name: string;
-  category: string;
-  status: string;
-  edit_token: string | null;
+  pass_id: string | null;
+  qr_token: string | null;
+  result: string;
+  created_at: string;
 };
 
 function createToken() {
@@ -51,12 +74,18 @@ function createSlug(name: string) {
   return `${base}-${Math.random().toString(36).slice(2, 7)}`;
 }
 
+function formatDate(date: string) {
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(date));
+}
+
 async function requireAdmin() {
   const adminSecret = process.env.ADMIN_SESSION_SECRET;
 
-  if (!adminSecret) {
-    throw new Error("Missing ADMIN_SESSION_SECRET");
-  }
+  if (!adminSecret) throw new Error("Missing ADMIN_SESSION_SECRET");
 
   const cookieStore = await cookies();
   const adminCookie = cookieStore.get("tln_admin")?.value;
@@ -116,9 +145,7 @@ async function approveApplication(formData: FormData) {
       rules: "Show your TLN Pass QR code before payment.",
     });
 
-    if (insertError) {
-      throw new Error(insertError.message);
-    }
+    if (insertError) throw new Error(insertError.message);
   }
 
   const { error: updateError } = await supabaseAdmin
@@ -126,9 +153,7 @@ async function approveApplication(formData: FormData) {
     .update({ status: "approved" })
     .eq("id", id);
 
-  if (updateError) {
-    throw new Error(updateError.message);
-  }
+  if (updateError) throw new Error(updateError.message);
 
   revalidatePath("/admin");
   revalidatePath("/partners");
@@ -144,9 +169,28 @@ async function rejectApplication(formData: FormData) {
     .update({ status: "rejected" })
     .eq("id", id);
 
-  if (error) {
-    throw new Error(error.message);
-  }
+  if (error) throw new Error(error.message);
+
+  revalidatePath("/admin");
+}
+
+async function setMemberStatus(formData: FormData) {
+  "use server";
+
+  const id = String(formData.get("id") || "");
+  const status = String(formData.get("status") || "");
+
+  if (!id || !status) throw new Error("Missing member id or status");
+
+  const { error } = await supabaseAdmin
+    .from("member_passes")
+    .update({
+      status,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) throw new Error(error.message);
 
   revalidatePath("/admin");
 }
@@ -154,25 +198,42 @@ async function rejectApplication(formData: FormData) {
 export default async function AdminPage() {
   await requireAdmin();
 
-  const { data: applications, error: applicationsError } = await supabaseAdmin
-    .from("partner_applications")
-    .select("*")
-    .order("created_at", { ascending: false });
+  const [
+    applicationsResult,
+    waitlistResult,
+    partnersResult,
+    membersResult,
+    logsResult,
+  ] = await Promise.all([
+    supabaseAdmin
+      .from("partner_applications")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("waitlist")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabaseAdmin.from("partners").select("*"),
+    supabaseAdmin
+      .from("member_passes")
+      .select("*")
+      .order("created_at", { ascending: false }),
+    supabaseAdmin
+      .from("pass_usage_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(20),
+  ]);
 
-  const { data: waitlist } = await supabaseAdmin
-    .from("waitlist")
-    .select("*")
-    .order("created_at", { ascending: false });
+  if (applicationsResult.error) throw new Error(applicationsResult.error.message);
+  if (membersResult.error) throw new Error(membersResult.error.message);
 
-  const { data: partners } = await supabaseAdmin.from("partners").select("*");
-
-  if (applicationsError) {
-    throw new Error(applicationsError.message);
-  }
-
-  const applicationList = (applications || []) as PartnerApplication[];
-  const waitlistMembers = (waitlist || []) as WaitlistMember[];
-  const partnerList = (partners || []) as Partner[];
+  const applicationList = (applicationsResult.data ||
+    []) as PartnerApplication[];
+  const waitlistMembers = (waitlistResult.data || []) as WaitlistMember[];
+  const partnerList = (partnersResult.data || []) as Partner[];
+  const memberList = (membersResult.data || []) as MemberPass[];
+  const usageLogs = (logsResult.data || []) as UsageLog[];
 
   const partnerByApplicationId = new Map(
     partnerList
@@ -180,19 +241,25 @@ export default async function AdminPage() {
       .map((partner) => [partner.application_id, partner])
   );
 
-  const pendingCount = applicationList.filter(
+  const activeMembers = memberList.filter(
+    (member) => member.status === "active"
+  ).length;
+
+  const pendingApplications = applicationList.filter(
     (application) => application.status === "pending"
   ).length;
 
-  const approvedCount = partnerList.filter(
+  const approvedPartners = partnerList.filter(
     (partner) => partner.status === "approved"
   ).length;
 
   const stats = [
+    ["Active members", String(activeMembers)],
+    ["Approved partners", String(approvedPartners)],
     ["Partner applications", String(applicationList.length)],
-    ["Approved partners", String(approvedCount)],
-    ["Waitlist members", String(waitlistMembers.length)],
-    ["Pending review", String(pendingCount)],
+    ["Pending review", String(pendingApplications)],
+    ["Waitlist", String(waitlistMembers.length)],
+    ["QR checks", String(usageLogs.length)],
   ];
 
   return (
@@ -200,8 +267,8 @@ export default async function AdminPage() {
       <section className="mx-auto max-w-7xl">
         <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-              Admin panel
+            <p className="text-sm font-bold uppercase tracking-[0.3em] text-amber-300/70">
+              Admin command center
             </p>
 
             <h1 className="mt-4 text-6xl font-black tracking-tight md:text-8xl">
@@ -209,17 +276,17 @@ export default async function AdminPage() {
             </h1>
 
             <p className="mt-6 max-w-2xl text-xl leading-8 text-zinc-400">
-              Manage applications, approvals, partner cards and private edit
-              links.
+              Manage members, subscriptions, partner applications, public cards
+              and QR verification logs.
             </p>
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
             <a
-              href="/apply"
-              className="rounded-full bg-white px-8 py-4 text-center font-black text-black transition hover:scale-105"
+              href="/partners"
+              className="rounded-full bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 px-8 py-4 text-center font-black text-black transition hover:scale-105"
             >
-              Open application form
+              Public partners
             </a>
 
             <form action={logoutAdmin}>
@@ -230,7 +297,7 @@ export default async function AdminPage() {
           </div>
         </div>
 
-        <div className="mt-14 grid gap-5 md:grid-cols-4">
+        <div className="mt-14 grid gap-5 md:grid-cols-3 lg:grid-cols-6">
           {stats.map(([label, value]) => (
             <div
               key={label}
@@ -243,14 +310,83 @@ export default async function AdminPage() {
         </div>
 
         <div className="mt-14 rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
-          <div className="mb-8">
-            <h2 className="text-3xl font-black">Partner applications</h2>
-            <p className="mt-2 text-zinc-500">
-              Approve a partner, then send them their private edit link.
-            </p>
-          </div>
+          <h2 className="text-4xl font-black">Members & subscriptions</h2>
 
-          <div className="space-y-4">
+          <div className="mt-8 space-y-4">
+            {memberList.length > 0 ? (
+              memberList.map((member) => (
+                <div
+                  key={member.id}
+                  className="grid gap-4 rounded-[2rem] border border-white/10 bg-black/50 p-5 lg:grid-cols-[1.4fr_1fr_1fr_1fr_auto]"
+                >
+                  <div>
+                    <p className="text-xl font-black">{member.full_name}</p>
+                    <p className="mt-1 text-sm text-zinc-500">
+                      {member.email}
+                    </p>
+                    <p className="mt-1 break-all text-xs text-zinc-700">
+                      {member.pass_code}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-zinc-600">Plan</p>
+                    <p className="mt-1 font-black">{member.plan}</p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-zinc-600">Valid until</p>
+                    <p className="mt-1 font-black">
+                      {formatDate(member.valid_until)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-zinc-600">Status</p>
+                    <span
+                      className={`mt-2 inline-flex rounded-full px-4 py-2 text-sm font-black ${
+                        member.status === "active"
+                          ? "bg-emerald-400/10 text-emerald-300"
+                          : member.status === "past_due"
+                            ? "bg-amber-400/10 text-amber-300"
+                            : "bg-red-400/10 text-red-300"
+                      }`}
+                    >
+                      {member.status}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-col gap-2">
+                    <form action={setMemberStatus}>
+                      <input type="hidden" name="id" value={member.id} />
+                      <input type="hidden" name="status" value="active" />
+                      <button className="w-full rounded-full bg-emerald-400 px-4 py-2 text-sm font-black text-black">
+                        Active
+                      </button>
+                    </form>
+
+                    <form action={setMemberStatus}>
+                      <input type="hidden" name="id" value={member.id} />
+                      <input type="hidden" name="status" value="canceled" />
+                      <button className="w-full rounded-full border border-red-400/20 px-4 py-2 text-sm font-black text-red-300">
+                        Cancel
+                      </button>
+                    </form>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
+                No members yet.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="mt-14 rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
+          <h2 className="text-4xl font-black">Partner applications</h2>
+
+          <div className="mt-8 space-y-4">
             {applicationList.length > 0 ? (
               applicationList.map((application) => {
                 const partner = partnerByApplicationId.get(application.id);
@@ -284,19 +420,17 @@ export default async function AdminPage() {
                         {application.address || "No address"}
                       </div>
 
-                      <div>
-                        <span
-                          className={`rounded-full px-4 py-2 text-sm font-black ${
-                            application.status === "approved"
-                              ? "bg-emerald-400/10 text-emerald-300"
-                              : application.status === "rejected"
-                                ? "bg-red-400/10 text-red-300"
-                                : "bg-amber-400/10 text-amber-300"
-                          }`}
-                        >
-                          {application.status}
-                        </span>
-                      </div>
+                      <span
+                        className={`w-fit rounded-full px-4 py-2 text-sm font-black ${
+                          application.status === "approved"
+                            ? "bg-emerald-400/10 text-emerald-300"
+                            : application.status === "rejected"
+                              ? "bg-red-400/10 text-red-300"
+                              : "bg-amber-400/10 text-amber-300"
+                        }`}
+                      >
+                        {application.status}
+                      </span>
 
                       <div className="flex gap-2 md:justify-end">
                         <form action={approveApplication}>
@@ -328,55 +462,89 @@ export default async function AdminPage() {
                         <p className="text-sm font-black text-zinc-400">
                           Private partner edit link
                         </p>
+
                         <a
                           href={editLink}
                           className="mt-2 inline-flex break-all text-sm font-bold text-white hover:text-zinc-300"
                         >
                           {editLink}
                         </a>
-                        <p className="mt-2 text-xs text-zinc-600">
-                          Send this link only to the approved business.
-                        </p>
                       </div>
                     )}
                   </div>
                 );
               })
             ) : (
-              <div className="rounded-[2rem] border border-white/10 bg-black/50 p-8 text-center text-zinc-500">
-                No partner applications yet.
+              <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
+                No applications yet.
               </div>
             )}
           </div>
         </div>
 
-        <div className="mt-14 rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
-          <h2 className="text-3xl font-black">Waitlist members</h2>
-          <p className="mt-2 text-zinc-500">
-            Latest people who joined the TLN Pass waitlist.
-          </p>
+        <div className="mt-14 grid gap-8 lg:grid-cols-2">
+          <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
+            <h2 className="text-4xl font-black">QR usage logs</h2>
 
-          <div className="mt-8 space-y-3">
-            {waitlistMembers.length > 0 ? (
-              waitlistMembers.slice(0, 10).map((member) => (
+            <div className="mt-8 space-y-3">
+              {usageLogs.length > 0 ? (
+                usageLogs.map((log) => (
+                  <div
+                    key={log.id}
+                    className="rounded-2xl border border-white/10 bg-black/40 p-5"
+                  >
+                    <div className="flex justify-between gap-4">
+                      <p
+                        className={`font-black ${
+                          log.result === "active"
+                            ? "text-emerald-300"
+                            : "text-red-300"
+                        }`}
+                      >
+                        {log.result}
+                      </p>
+
+                      <p className="text-sm text-zinc-600">
+                        {formatDate(log.created_at)}
+                      </p>
+                    </div>
+
+                    <p className="mt-2 break-all text-xs text-zinc-700">
+                      {log.qr_token || "No token"}
+                    </p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
+                  No QR logs yet.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
+            <h2 className="text-4xl font-black">Waitlist</h2>
+
+            <div className="mt-8 space-y-3">
+              {waitlistMembers.slice(0, 10).map((member) => (
                 <div
                   key={member.id}
-                  className="flex flex-col justify-between gap-2 rounded-2xl border border-white/10 bg-black/40 p-5 md:flex-row md:items-center"
+                  className="rounded-2xl border border-white/10 bg-black/40 p-5"
                 >
-                  <div>
-                    <p className="font-black">{member.name}</p>
-                    <p className="text-sm text-zinc-500">{member.email}</p>
-                  </div>
-                  <p className="text-sm text-zinc-400">
+                  <p className="font-black">{member.name}</p>
+                  <p className="text-sm text-zinc-500">{member.email}</p>
+                  <p className="mt-2 text-sm text-zinc-600">
                     {member.interest || "Everything"}
                   </p>
                 </div>
-              ))
-            ) : (
-              <div className="rounded-[2rem] border border-white/10 bg-black/50 p-8 text-center text-zinc-500">
-                No waitlist members yet.
-              </div>
-            )}
+              ))}
+
+              {waitlistMembers.length === 0 && (
+                <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
+                  No waitlist members.
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </section>
