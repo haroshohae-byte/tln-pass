@@ -20,11 +20,7 @@ export default function ContactPage() {
   return (
     <main className="min-h-screen bg-black px-6 py-24 text-white">
       <section className="mx-auto max-w-7xl">
-        <a href="/" className="text-sm text-zinc-400 hover:text-white">
-          ← Back to home
-        </a>
-
-        <div className="mt-16 grid gap-16 lg:grid-cols-2">
+        <div className="grid gap-16 lg:grid-cols-2">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
               Contact TLN Pass
@@ -35,8 +31,7 @@ export default function ContactPage() {
             </h1>
 
             <p className="mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
-              Contact us if you want to become a partner, join the membership
-              waitlist or learn more about TLN Pass.
+              Contact us if you want to become a partner, join the membership waitlist or learn more about TLN Pass.
             </p>
 
             <div className="mt-10 space-y-5">
@@ -49,7 +44,7 @@ export default function ContactPage() {
                   <p className="mt-3 text-zinc-400">{option.text}</p>
                   <a
                     href={`mailto:${option.email}`}
-                    className="mt-4 inline-flex text-sm font-bold text-white hover:text-zinc-300"
+                    className="mt-4 inline-flex text-sm font-black text-white hover:text-zinc-300"
                   >
                     {option.email}
                   </a>
@@ -62,8 +57,7 @@ export default function ContactPage() {
             <div className="mb-8">
               <h2 className="text-4xl font-black">Send a request</h2>
               <p className="mt-4 text-zinc-400">
-                This form is a visual prototype. Later we will connect it to
-                email, database or CRM.
+                This form is a visual prototype. Later we will connect it to email, database or CRM.
               </p>
             </div>
 
