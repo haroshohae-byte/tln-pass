@@ -4,6 +4,7 @@ import { dictionary, normalizeLang } from "../../lib/i18n";
 import { getPlanById, getStripePriceId } from "../../lib/plans";
 import { getSiteSettings } from "../../lib/siteSettings";
 import { stripe } from "../../lib/stripe";
+import JoinCheckoutForm from "./JoinCheckoutForm";
 
 async function getBaseUrl() {
   const headersList = await headers();
@@ -92,11 +93,13 @@ export default async function JoinPage({
   const cookieStore = await cookies();
   const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
   const t = dictionary[lang].join;
+  const planCopy = dictionary[lang].plans;
   const settings = await getSiteSettings();
   const paymentsDisabled = settings.stripePaymentsEnabled === "false";
 
   const { plan: planParam } = await searchParams;
   const plan = getPlanById(planParam);
+  const selectedPlan = planCopy.items[plan.id];
 
   return (
     <main className="min-h-screen bg-[#050505] px-5 py-16 text-white">
@@ -130,8 +133,10 @@ export default async function JoinPage({
 
             <div className="mt-6 flex items-end justify-between gap-5">
               <div>
-                <h2 className="text-4xl font-black">{plan.name}</h2>
-                <p className="mt-2 font-bold text-zinc-500">{plan.duration}</p>
+                <h2 className="text-4xl font-black">{selectedPlan.name}</h2>
+                <p className="mt-2 font-bold text-zinc-500">
+                  {selectedPlan.duration}
+                </p>
               </div>
 
               <div className="text-right">
@@ -142,40 +147,23 @@ export default async function JoinPage({
               </div>
             </div>
 
-            <p className="mt-6 leading-7 text-zinc-400">{plan.note}</p>
+            <p className="mt-6 leading-7 text-zinc-400">{selectedPlan.note}</p>
           </div>
 
           {paymentsDisabled ? (
             <div className="mt-6 rounded-[2rem] bg-zinc-100 p-6 text-center font-black text-zinc-600">
-              Stripe payments are currently disabled.
+              {t.paymentsDisabled}
             </div>
           ) : (
-          <form action={startCheckout} className="mt-6 space-y-4">
-            <input type="hidden" name="plan" value={plan.id} />
-
-            <input
-              name="full_name"
-              type="text"
-              required
-              placeholder={t.name}
-              className="w-full rounded-2xl border border-black/10 bg-zinc-100 px-5 py-4 font-bold text-black outline-none placeholder:text-zinc-500 focus:border-black/30"
+            <JoinCheckoutForm
+              action={startCheckout}
+              planId={plan.id}
+              labels={{
+                name: t.name,
+                email: t.email,
+                button: t.button,
+              }}
             />
-
-            <input
-              name="email"
-              type="email"
-              required
-              placeholder={t.email}
-              className="w-full rounded-2xl border border-black/10 bg-zinc-100 px-5 py-4 font-bold text-black outline-none placeholder:text-zinc-500 focus:border-black/30"
-            />
-
-            <button
-              type="submit"
-              className="w-full rounded-full bg-black px-8 py-5 font-black text-white transition hover:scale-[1.02]"
-            >
-              {t.button}
-            </button>
-          </form>
           )}
 
           <p className="mt-5 text-center text-xs font-bold text-zinc-500">

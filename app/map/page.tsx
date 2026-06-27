@@ -1,6 +1,12 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
+import { dictionary, normalizeLang } from "../../lib/i18n";
 
-export default function MapPage() {
+export default async function MapPage() {
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = dictionary[lang].map;
+
   return (
     <main className="min-h-screen bg-[#f5f5f7] px-5 py-16 text-[#1d1d1f]">
       <section className="mx-auto max-w-7xl">
@@ -11,10 +17,10 @@ export default function MapPage() {
                 <div className="grid aspect-[4/3] place-items-center rounded-[1.5rem] border border-white/10 bg-black/30">
                   <div className="text-center">
                     <p className="text-sm font-black uppercase tracking-[0.25em] text-white/40">
-                      Map foundation
+                      {t.eyebrow}
                     </p>
                     <h1 className="mt-4 text-5xl font-black tracking-tight">
-                      Interactive map coming later.
+                      {t.title}
                     </h1>
                   </div>
                 </div>
@@ -23,20 +29,17 @@ export default function MapPage() {
 
             <aside className="flex flex-col justify-center p-7 md:p-9">
               <p className="text-sm font-black uppercase tracking-[0.25em] text-white/45">
-                Hidden during beta
+                {t.hidden}
               </p>
               <h2 className="mt-4 text-4xl font-black tracking-tight">
-                Use the partner guide for launch.
+                {t.guideTitle}
               </h2>
-              <p className="mt-4 leading-7 text-white/60">
-                The map route is kept for future development, but it is not shown
-                in public navigation until the full map experience is ready.
-              </p>
+              <p className="mt-4 leading-7 text-white/60">{t.guideText}</p>
               <Link
                 href="/partners"
                 className="mt-8 w-fit rounded-full bg-white px-7 py-4 font-black text-black transition hover:-translate-y-0.5"
               >
-                Open partners
+                {t.cta}
               </Link>
             </aside>
           </div>

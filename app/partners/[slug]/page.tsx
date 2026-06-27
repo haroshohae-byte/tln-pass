@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { normalizeLang, type Lang } from "../../../lib/i18n";
+import { dictionary, normalizeLang } from "../../../lib/i18n";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import PartnerActionLink from "../../components/PartnerActionLink";
 import PartnerViewTracker from "../../components/PartnerViewTracker";
@@ -49,81 +49,6 @@ type PartnerPromotion = {
   ends_at: string | null;
   is_active: boolean | null;
 };
-
-const text = {
-  en: {
-    back: "Back to partners",
-    benefit: "Member benefit",
-    how: "How to use your pass",
-    defaultHow:
-      "Show your dynamic TLN Pass QR before paying. The partner will verify your active membership and apply the available member benefit.",
-    info: "Info",
-    address: "Address",
-    hours: "Hours",
-    phone: "Phone",
-    website: "Website",
-    instagram: "Instagram",
-    maps: "Open in Maps",
-    menu: "Member menu",
-    noMenu: "Меню скоро появится.",
-    join: "Join TLN Pass",
-  },
-  ru: {
-    back: "Назад к партнёрам",
-    benefit: "Привилегия участника",
-    how: "Как использовать pass",
-    defaultHow:
-      "Покажи динамический QR TLN Pass перед оплатой. Партнёр проверит активную подписку и применит доступную привилегию.",
-    info: "Информация",
-    address: "Адрес",
-    hours: "Часы",
-    phone: "Телефон",
-    website: "Сайт",
-    instagram: "Instagram",
-    maps: "Открыть карту",
-    menu: "Меню для участников",
-    noMenu: "Меню скоро появится.",
-    join: "Купить TLN Pass",
-  },
-  ee: {
-    back: "Tagasi partnerite juurde",
-    benefit: "Liikme eelis",
-    how: "Kuidas passi kasutada",
-    defaultHow:
-      "Näita dünaamilist TLN Pass QR-koodi enne maksmist. Partner kontrollib aktiivset liikmesust ja rakendab liikme eelise.",
-    info: "Info",
-    address: "Aadress",
-    hours: "Lahtiolekuajad",
-    phone: "Telefon",
-    website: "Veebileht",
-    instagram: "Instagram",
-    maps: "Ava kaardil",
-    menu: "Liikme menüü",
-    noMenu: "Меню скоро появится.",
-    join: "Liitu TLN Passiga",
-  },
-};
-
-const detailText = {
-  en: {
-    promotions: "Current member offers",
-    step1: "Show your dynamic QR before paying.",
-    step2: "The partner verifies active membership.",
-    step3: "Your TLN Pass benefit is applied.",
-  },
-  ru: {
-    promotions: "Актуальные предложения для участников",
-    step1: "Покажи QR перед оплатой.",
-    step2: "Партнёр проверяет активную подписку.",
-    step3: "Твоя привилегия TLN Pass применяется.",
-  },
-  ee: {
-    promotions: "Praegused liikme pakkumised",
-    step1: "Näita QR-koodi enne maksmist.",
-    step2: "Partner kontrollib aktiivset liikmesust.",
-    step3: "Sinu TLN Pass eelis rakendatakse.",
-  },
-} as const;
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
@@ -259,8 +184,7 @@ export default async function PartnerDetailPage({
 }) {
   const cookieStore = await cookies();
   const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
-  const t = text[lang as Lang];
-  const d = detailText[lang as Lang];
+  const t = dictionary[lang].partnerDetail;
 
   const { slug } = await params;
   const partner = await getPartner(slug);
@@ -297,7 +221,7 @@ export default async function PartnerDetailPage({
   );
   const menuGroups = Array.from(
     items.reduce((groups, item) => {
-      const category = item.category || "Specials";
+      const category = item.category || t.specials;
       groups.set(category, [...(groups.get(category) || []), item]);
       return groups;
     }, new Map<string, MenuItem[]>())
@@ -351,8 +275,12 @@ export default async function PartnerDetailPage({
           <div className="grid gap-6 p-5 md:p-7 lg:grid-cols-[1fr_360px]">
             <div className="space-y-5">
               <div className="grid gap-3 sm:grid-cols-2">
-                {partner.address && <Info label={t.address} value={partner.address} />}
-                {partner.opening_hours && <Info label={t.hours} value={partner.opening_hours} />}
+                {partner.address && (
+                  <Info label={t.address} value={partner.address} />
+                )}
+                {partner.opening_hours && (
+                  <Info label={t.hours} value={partner.opening_hours} />
+                )}
               </div>
 
               {partner.description && (
@@ -368,7 +296,7 @@ export default async function PartnerDetailPage({
               </p>
 
               <p className="mt-4 text-2xl font-black leading-tight">
-                {partner.offer || "TLN Pass member benefit"}
+                {partner.offer || t.fallbackBenefit}
               </p>
 
               <div className="mt-5 grid gap-3">
@@ -429,7 +357,7 @@ export default async function PartnerDetailPage({
               TLN Pass
             </p>
             <h2 className="mt-2 text-4xl font-black tracking-tight">
-              {d.promotions}
+              {t.promotions}
             </h2>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {promotions.map((promotion) => (
@@ -554,7 +482,7 @@ export default async function PartnerDetailPage({
             <div className="mt-8 rounded-[2.4rem] bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
               <h3 className="text-4xl font-black">{t.noMenu}</h3>
               <p className="mx-auto mt-4 max-w-xl leading-7 text-zinc-600">
-                The partner is preparing their TLN Pass menu.
+                {t.noMenuText}
               </p>
             </div>
           )}
@@ -566,11 +494,11 @@ export default async function PartnerDetailPage({
               {t.how}
             </p>
             <div className="mt-4 grid gap-3">
-              {[d.step1, d.step2, partner.rules || d.step3].map(
+              {[t.step1, t.step2, partner.rules || t.step3].map(
                 (step, index) => (
                   <div key={step} className="rounded-2xl bg-zinc-100 p-4">
                     <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-400">
-                      Step {index + 1}
+                      {t.stepLabel} {index + 1}
                     </p>
                     <p className="mt-2 font-bold leading-7 text-zinc-700">
                       {step}
@@ -587,7 +515,9 @@ export default async function PartnerDetailPage({
             </p>
             <div className="mt-4 grid gap-3">
               {partner.phone && <Info label={t.phone} value={partner.phone} />}
-              {partner.address && <Info label={t.address} value={partner.address} />}
+              {partner.address && (
+                <Info label={t.address} value={partner.address} />
+              )}
             </div>
           </section>
         </div>

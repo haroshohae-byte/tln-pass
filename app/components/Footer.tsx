@@ -24,7 +24,7 @@ export default async function Footer() {
             <div>
               <p className="text-lg font-black">TLN Pass</p>
               <p className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-600">
-                Tallinn membership
+                {t.brand.footerTagline}
               </p>
             </div>
           </Link>
@@ -47,7 +47,7 @@ export default async function Footer() {
         <FooterGroup title={t.footer.company}>
           <FooterLink href="/business">{t.nav.business}</FooterLink>
           <FooterLink href="/contact">{t.nav.contact}</FooterLink>
-          <FooterLink href="/faq">FAQ</FooterLink>
+          <FooterLink href="/faq">{t.footer.faq}</FooterLink>
           {instagramUrl && (
             <a href={instagramUrl} className="hover:text-white">
               Instagram

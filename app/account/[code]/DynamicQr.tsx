@@ -8,7 +8,26 @@ type QrState = {
   verifyUrl: string;
 };
 
-export default function DynamicQr({ passCode }: { passCode: string }) {
+type DynamicQrCopy = {
+  errorTitle: string;
+  tryAgain: string;
+  secure: string;
+  dynamicPass: string;
+  loading: string;
+  unavailable: string;
+  note: string;
+  alt: string;
+  generateError: string;
+  requestFailed: string;
+};
+
+export default function DynamicQr({
+  passCode,
+  copy,
+}: {
+  passCode: string;
+  copy: DynamicQrCopy;
+}) {
   const [qr, setQr] = useState<QrState | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
   const [error, setError] = useState("");
@@ -30,7 +49,7 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Could not generate QR");
+        setError(data.error || copy.generateError);
         setQr(null);
         setLoading(false);
         return;
@@ -40,13 +59,13 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
       setLoading(false);
     } catch (error) {
       const message =
-        error instanceof Error ? error.message : "QR request failed";
+        error instanceof Error ? error.message : copy.requestFailed;
 
       setError(message);
       setQr(null);
       setLoading(false);
     }
-  }, [passCode]);
+  }, [copy.generateError, copy.requestFailed, passCode]);
 
   useEffect(() => {
     const initial = window.setTimeout(() => {
@@ -84,7 +103,7 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
   if (error) {
     return (
       <div className="rounded-[3rem] border border-red-400/20 bg-red-400/10 p-8 text-red-300">
-        <h2 className="text-3xl font-black">QR error</h2>
+        <h2 className="text-3xl font-black">{copy.errorTitle}</h2>
 
         <p className="mt-4 leading-7">{error}</p>
 
@@ -92,7 +111,7 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
           onClick={loadQr}
           className="mt-6 rounded-full bg-red-300 px-6 py-3 font-black text-black"
         >
-          Try again
+          {copy.tryAgain}
         </button>
       </div>
     );
@@ -104,9 +123,9 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
         <div className="flex items-center justify-between gap-4">
           <div>
             <p className="text-xs font-black uppercase tracking-[0.25em] text-black/40">
-              Secure QR
+              {copy.secure}
             </p>
-            <h2 className="mt-2 text-3xl font-black">Dynamic pass</h2>
+            <h2 className="mt-2 text-3xl font-black">{copy.dynamicPass}</h2>
           </div>
 
           <div className="rounded-full bg-emerald-400 px-4 py-2 text-sm font-black text-black">
@@ -118,18 +137,18 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
           {qr?.qrDataUrl ? (
             <img
               src={qr.qrDataUrl}
-              alt="Dynamic TLN Pass QR"
+              alt={copy.alt}
               className="w-full"
             />
           ) : (
             <div className="flex h-80 items-center justify-center text-black/40">
-              {loading ? "Loading QR..." : "QR not available"}
+              {loading ? copy.loading : copy.unavailable}
             </div>
           )}
         </div>
 
         <p className="mt-5 text-center text-sm font-bold text-black/45">
-          QR refreshes automatically. Screenshots expire quickly.
+          {copy.note}
         </p>
 
         {qr?.verifyUrl && (

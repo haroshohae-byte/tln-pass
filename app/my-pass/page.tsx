@@ -1,46 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
-import { normalizeLang } from "../../lib/i18n";
-
-const copy = {
-  en: {
-    eyebrow: "Member access",
-    title: "Your pass is one code away.",
-    subtitle:
-      "Open a saved pass on this device or enter your pass code manually.",
-    saved: "Open saved pass",
-    noSaved: "No saved pass on this device",
-    join: "Get TLN Pass",
-    input: "Enter pass code",
-    open: "Open pass",
-    help: "The pass is device-linked for better protection.",
-  },
-  ru: {
-    eyebrow: "Доступ участника",
-    title: "Твой pass в одном коде.",
-    subtitle:
-      "Открой сохранённый pass на этом устройстве или введи код вручную.",
-    saved: "Открыть сохранённый pass",
-    noSaved: "На этом устройстве pass не сохранён",
-    join: "Купить TLN Pass",
-    input: "Введи pass code",
-    open: "Открыть pass",
-    help: "Pass привязывается к устройству для защиты.",
-  },
-  ee: {
-    eyebrow: "Liikme ligipääs",
-    title: "Sinu pass on ühe koodi kaugusel.",
-    subtitle:
-      "Ava selles seadmes salvestatud pass või sisesta passikood käsitsi.",
-    saved: "Ava salvestatud pass",
-    noSaved: "Selles seadmes pole salvestatud passi",
-    join: "Hangi TLN Pass",
-    input: "Sisesta passikood",
-    open: "Ava pass",
-    help: "Pass seotakse seadmega parema kaitse jaoks.",
-  },
-};
+import { dictionary, normalizeLang } from "../../lib/i18n";
 
 async function openPass(formData: FormData) {
   "use server";
@@ -59,7 +20,7 @@ async function openPass(formData: FormData) {
 export default async function MyPassPage() {
   const cookieStore = await cookies();
   const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
-  const t = copy[lang];
+  const t = dictionary[lang].myPass;
   const savedPassCode = cookieStore.get("tln_last_pass_code")?.value;
 
   return (
@@ -97,7 +58,7 @@ export default async function MyPassPage() {
                 className="rounded-[2rem] bg-[#1d1d1f] p-7 text-white transition hover:-translate-y-1"
               >
                 <p className="text-sm font-black uppercase tracking-[0.22em] text-white/35">
-                  Saved
+                  {t.savedLabel}
                 </p>
 
                 <h2 className="mt-12 text-3xl font-black tracking-tight">
@@ -107,7 +68,7 @@ export default async function MyPassPage() {
             ) : (
               <div className="rounded-[2rem] bg-zinc-100 p-7 text-zinc-500">
                 <p className="text-sm font-black uppercase tracking-[0.22em] text-zinc-400">
-                  Saved
+                  {t.savedLabel}
                 </p>
 
                 <h2 className="mt-12 text-3xl font-black tracking-tight">
@@ -121,7 +82,7 @@ export default async function MyPassPage() {
               className="rounded-[2rem] bg-[#e8f3ff] p-7 text-[#0b3b75] transition hover:-translate-y-1"
             >
               <p className="text-sm font-black uppercase tracking-[0.22em] opacity-50">
-                New
+                {t.newLabel}
               </p>
 
               <h2 className="mt-12 text-3xl font-black tracking-tight">
@@ -131,11 +92,11 @@ export default async function MyPassPage() {
 
             <div className="rounded-[2rem] bg-[#fff3df] p-7 text-[#7a3f00]">
               <p className="text-sm font-black uppercase tracking-[0.22em] opacity-50">
-                Secure
+                {t.secureLabel}
               </p>
 
               <h2 className="mt-12 text-3xl font-black tracking-tight">
-                Device protected
+                {t.protectedTitle}
               </h2>
             </div>
           </div>
@@ -145,6 +106,7 @@ export default async function MyPassPage() {
             className="grid gap-3 border-t border-black/5 p-5 md:grid-cols-[1fr_auto] md:p-7"
           >
             <input
+        suppressHydrationWarning
               name="pass_code"
               type="text"
               required

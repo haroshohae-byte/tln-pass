@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { dictionary, normalizeLang } from "../../lib/i18n";
 import { getSiteSettings } from "../../lib/siteSettings";
 
 type LegalCard = {
@@ -8,7 +10,7 @@ type LegalCard = {
 
 type LegalSection = {
   title: string;
-  items: string[];
+  items: readonly string[];
 };
 
 export default async function LegalLayout({
@@ -23,9 +25,12 @@ export default async function LegalLayout({
   title: string;
   intro: string;
   updated: string;
-  cards: LegalCard[];
-  sections: LegalSection[];
+  cards: readonly LegalCard[];
+  sections: readonly LegalSection[];
 }) {
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const layoutText = dictionary[lang].legalLayout;
   const settings = await getSiteSettings();
   const supportEmail = settings.supportEmail;
 
@@ -48,21 +53,21 @@ export default async function LegalLayout({
 
             <aside className="rounded-[2rem] bg-[#f5f5f7] p-6">
               <p className="text-sm font-black uppercase tracking-[0.22em] text-zinc-500">
-                Updated
+                {layoutText.updated}
               </p>
               <p className="mt-3 text-3xl font-black">{updated}</p>
               <p className="mt-5 leading-7 text-zinc-600">
-                Questions about these terms can be sent through{" "}
+                {layoutText.questionsBefore}{" "}
                 {supportEmail ? (
                   <a className="font-black text-black" href={`mailto:${supportEmail}`}>
                     {supportEmail}
                   </a>
                 ) : (
                   <Link className="font-black text-black" href="/contact">
-                    the contact page
+                    {layoutText.contactPage}
                   </Link>
                 )}
-                .
+                {layoutText.questionsAfter}
               </p>
             </aside>
           </div>

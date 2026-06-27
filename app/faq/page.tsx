@@ -1,49 +1,26 @@
-const memberFaq = [
-  {
-    q: "How do I use TLN Pass?",
-    a: "Open your pass, show the dynamic QR before paying and let the partner verify your active membership.",
-  },
-  {
-    q: "Can I screenshot the QR?",
-    a: "The pass is designed to be dynamic and device-linked, so members should open the live pass instead of using a screenshot.",
-  },
-  {
-    q: "What if my pass does not work?",
-    a: "Contact support with your email and pass code so the team can check status, validity and device lock.",
-  },
-];
+import { cookies } from "next/headers";
+import { dictionary, normalizeLang } from "../../lib/i18n";
 
-const partnerFaq = [
-  {
-    q: "How do businesses join?",
-    a: "Submit a partner application. After approval, TLN Pass creates the partner profile and dashboard link.",
-  },
-  {
-    q: "Who edits the menu and offer?",
-    a: "Partners can update the public card, menu items, prices, images and active promotions from their private dashboard link.",
-  },
-  {
-    q: "How are QR checks tracked?",
-    a: "QR verification logs are saved for admin analytics when the QR system is used by a partner.",
-  },
-];
+export default async function FaqPage() {
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = dictionary[lang].faq;
 
-export default function FaqPage() {
   return (
     <main className="min-h-screen bg-[#f5f5f7] px-5 py-16 text-[#1d1d1f]">
       <section className="mx-auto max-w-5xl">
         <div className="text-center">
           <p className="text-sm font-black uppercase tracking-[0.25em] text-zinc-500">
-            FAQ
+            {t.eyebrow}
           </p>
           <h1 className="mt-5 text-5xl font-black tracking-tight md:text-7xl">
-            Questions before using TLN Pass.
+            {t.title}
           </h1>
         </div>
 
         <div className="mt-12 grid gap-8 lg:grid-cols-2">
-          <FaqGroup title="Members" items={memberFaq} />
-          <FaqGroup title="Partners" items={partnerFaq} />
+          <FaqGroup title={t.members} items={t.memberItems} />
+          <FaqGroup title={t.partners} items={t.partnerItems} />
         </div>
       </section>
     </main>
@@ -55,7 +32,7 @@ function FaqGroup({
   items,
 }: {
   title: string;
-  items: { q: string; a: string }[];
+  items: readonly { q: string; a: string }[];
 }) {
   return (
     <section className="premium-card p-7">

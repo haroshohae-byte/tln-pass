@@ -1,8 +1,10 @@
 import { revalidatePath } from "next/cache";
+import { cookies } from "next/headers";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import CopyButton from "../../components/CopyButton";
 import ImagePreviewInput from "../../components/ImagePreviewInput";
+import { dictionary, launchCopy, normalizeLang, type Lang } from "../../../lib/i18n";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import DiscountFields from "./DiscountFields";
 
@@ -73,6 +75,17 @@ type PartnerPromotion = {
   is_active: boolean | null;
   created_at?: string | null;
 };
+
+type PartnerDashboardCopy = (typeof launchCopy)[Lang]["partnerDashboard"];
+type ImageInputCopy = (typeof launchCopy)[Lang]["imageInput"];
+
+function copyValue<T extends Record<string, string>>(copy: T, key?: string | null) {
+  if (!key) {
+    return "";
+  }
+
+  return copy[key as keyof T] || key;
+}
 
 const partnerCategories = [
   "restaurants",
@@ -644,6 +657,11 @@ export default async function PartnerDashboardTokenPage({
 }) {
   const { token } = await params;
   const { saved } = await searchParams;
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = launchCopy[lang].partnerDashboard;
+  const imageCopy = launchCopy[lang].imageInput;
+  const categoryCopy = dictionary[lang].categories;
 
   const { data, error } = await supabaseAdmin
     .from("partners")
@@ -656,22 +674,22 @@ export default async function PartnerDashboardTokenPage({
       <main className="min-h-screen bg-black px-6 py-24 text-white">
         <section className="mx-auto max-w-3xl text-center">
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-            Partner dashboard
+            {t.notFoundEyebrow}
           </p>
 
           <h1 className="mt-4 text-6xl font-black tracking-tight md:text-8xl">
-            Link not found.
+            {t.notFoundTitle}
           </h1>
 
           <p className="mt-8 text-xl leading-8 text-zinc-400">
-            This partner edit link is invalid or no longer available.
+            {t.notFoundText}
           </p>
 
           <Link
             href="/apply"
             className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black transition hover:-translate-y-0.5"
           >
-            Apply as partner
+            {t.applyCta}
           </Link>
         </section>
       </main>
@@ -739,16 +757,16 @@ export default async function PartnerDashboardTokenPage({
   const clickCount = (eventType: string) =>
     clickEvents.filter((event) => event.event_type === eventType).length;
   const profileChecks = [
-    { label: "Business name", ok: Boolean(partner.business_name) },
-    { label: "Category", ok: Boolean(partner.category) },
-    { label: "Address", ok: Boolean(partner.address) },
-    { label: "Offer", ok: Boolean(partner.offer) },
-    { label: "Opening hours", ok: Boolean(partner.opening_hours) },
-    { label: "Cover photo", ok: Boolean(partner.image_url) },
-    { label: "Description", ok: Boolean(partner.description) },
-    { label: "Website or Instagram", ok: Boolean(partner.website || partner.instagram) },
-    { label: "How to use", ok: Boolean(partner.rules) },
-    { label: "Menu item", ok: items.length > 0 },
+    { label: t.checks.businessName, ok: Boolean(partner.business_name) },
+    { label: t.checks.category, ok: Boolean(partner.category) },
+    { label: t.checks.address, ok: Boolean(partner.address) },
+    { label: t.checks.offer, ok: Boolean(partner.offer) },
+    { label: t.checks.openingHours, ok: Boolean(partner.opening_hours) },
+    { label: t.checks.coverPhoto, ok: Boolean(partner.image_url) },
+    { label: t.checks.description, ok: Boolean(partner.description) },
+    { label: t.checks.websiteOrInstagram, ok: Boolean(partner.website || partner.instagram) },
+    { label: t.checks.howToUse, ok: Boolean(partner.rules) },
+    { label: t.checks.menuItem, ok: items.length > 0 },
   ];
   const profileCompletion = completionPercent(profileChecks);
   const qrConversion =
@@ -760,21 +778,20 @@ export default async function PartnerDashboardTokenPage({
         <div className="mb-10 flex flex-col justify-between gap-6 lg:flex-row lg:items-end">
           <div>
             <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-              Partner dashboard
+              {t.eyebrow}
             </p>
 
             <h1 className="mt-4 max-w-5xl text-5xl font-black tracking-tight md:text-8xl">
-              Manage your place.
+              {t.title}
             </h1>
 
             <p className="mt-6 max-w-2xl text-lg leading-8 text-zinc-400">
-              Keep your public page, offer and member menu ready for TLN Pass
-              users.
+              {t.subtitle}
             </p>
 
             {saved && (
               <div className="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-5 font-bold text-emerald-300">
-                Changes saved successfully.
+                {t.saved}
               </div>
             )}
           </div>
@@ -784,12 +801,12 @@ export default async function PartnerDashboardTokenPage({
               href={publicUrl}
               className="rounded-full bg-white px-7 py-4 text-center font-black text-black transition hover:-translate-y-0.5"
             >
-              View public page
+              {t.viewPublic}
             </Link>
             <CopyButton
               value={publicUrl}
-              label="Copy public link"
-              copiedLabel="Copied"
+              label={t.copyPublic}
+              copiedLabel={t.copied}
               className="rounded-full border border-white/10 bg-white/[0.06] px-7 py-4 text-center font-black text-white"
             />
           </div>
@@ -797,13 +814,14 @@ export default async function PartnerDashboardTokenPage({
 
         <div className="grid gap-8 lg:grid-cols-[0.95fr_1.05fr]">
           <div className="space-y-8">
-            <Panel title="Restaurant card">
+            <Panel title={t.panels.card}>
               <form action={updatePartnerCard} className="space-y-5">
-                <input type="hidden" name="id" value={partner.id} />
-                <input type="hidden" name="token" value={partner.edit_token} />
+                <input suppressHydrationWarning type="hidden" name="id" value={partner.id} />
+                <input suppressHydrationWarning type="hidden" name="token" value={partner.edit_token} />
 
-                <Field label="Business name">
+                <Field label={t.fields.businessName}>
                   <input
+        suppressHydrationWarning
                     name="business_name"
                     type="text"
                     required
@@ -812,8 +830,9 @@ export default async function PartnerDashboardTokenPage({
                   />
                 </Field>
 
-                <Field label="Category">
+                <Field label={t.fields.category}>
                   <select
+        suppressHydrationWarning
                     name="category"
                     defaultValue={partner.category || "restaurants"}
                     required
@@ -821,14 +840,15 @@ export default async function PartnerDashboardTokenPage({
                   >
                     {partnerCategories.map((category) => (
                       <option key={category} value={category}>
-                        {category}
+                        {copyValue(categoryCopy, category)}
                       </option>
                     ))}
                   </select>
                 </Field>
 
-                <Field label="Address">
+                <Field label={t.fields.address}>
                   <input
+        suppressHydrationWarning
                     name="address"
                     type="text"
                     required
@@ -838,8 +858,9 @@ export default async function PartnerDashboardTokenPage({
                 </Field>
 
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="Phone">
+                  <Field label={t.fields.phone}>
                     <input
+        suppressHydrationWarning
                       name="phone"
                       type="tel"
                       defaultValue={partner.phone || ""}
@@ -847,8 +868,9 @@ export default async function PartnerDashboardTokenPage({
                     />
                   </Field>
 
-                  <Field label="Opening hours">
+                  <Field label={t.fields.openingHours}>
                     <input
+        suppressHydrationWarning
                       name="opening_hours"
                       type="text"
                       defaultValue={partner.opening_hours || ""}
@@ -858,40 +880,44 @@ export default async function PartnerDashboardTokenPage({
                 </div>
 
                 <div className="grid gap-5 sm:grid-cols-2">
-                  <Field label="Website">
+                  <Field label={t.fields.website}>
                     <input
+        suppressHydrationWarning
                       name="website"
                       type="url"
                       defaultValue={partner.website || ""}
-                      placeholder="https://example.com"
+                      placeholder={t.placeholders.website}
                       className="field"
                     />
                   </Field>
 
-                  <Field label="Instagram">
+                  <Field label={t.fields.instagram}>
                     <input
+        suppressHydrationWarning
                       name="instagram"
                       type="text"
                       defaultValue={partner.instagram || ""}
-                      placeholder="@name or link"
+                      placeholder={t.placeholders.instagram}
                       className="field"
                     />
                   </Field>
                 </div>
 
-                <Field label="Offer">
+                <Field label={t.fields.offer}>
                   <input
+        suppressHydrationWarning
                     name="offer"
                     type="text"
                     required
                     defaultValue={partner.offer || ""}
-                    placeholder="-20% for TLN Pass members"
+                    placeholder={t.placeholders.offer}
                     className="field"
                   />
                 </Field>
 
-                <Field label="Rules / How to use pass">
+                <Field label={t.fields.rules}>
                   <textarea
+        suppressHydrationWarning
                     name="rules"
                     rows={3}
                     defaultValue={partner.rules || ""}
@@ -899,8 +925,9 @@ export default async function PartnerDashboardTokenPage({
                   />
                 </Field>
 
-                <Field label="Description">
+                <Field label={t.fields.description}>
                   <textarea
+        suppressHydrationWarning
                     name="description"
                     rows={5}
                     maxLength={420}
@@ -911,47 +938,50 @@ export default async function PartnerDashboardTokenPage({
 
                 <ImagePreviewInput
                   name="image"
-                  label="Cover photo"
+                  label={t.fields.coverPhoto}
                   currentUrl={partner.image_url}
+                  copy={imageCopy}
                 />
 
                 <button
                   type="submit"
                   className="w-full rounded-full bg-white px-8 py-5 font-black text-black transition hover:-translate-y-0.5"
                 >
-                  Save restaurant card
+                  {t.buttons.saveCard}
                 </button>
               </form>
             </Panel>
 
-            <Panel title="Add item">
+            <Panel title={t.panels.addItem}>
               <MenuItemForm
                 action={addMenuItem}
                 partner={partner}
-                buttonLabel="Add item"
+                buttonLabel={t.buttons.addItem}
+                copy={t}
+                imageCopy={imageCopy}
               />
             </Panel>
           </div>
 
           <div className="space-y-8">
-            <Panel title="Analytics">
+            <Panel title={t.panels.analytics}>
               <div className="grid gap-3 sm:grid-cols-2">
-                <DashboardMetric label="Page views" value={pageViews.length} />
-                <DashboardMetric label="Views today" value={pageViews.filter((view) => isToday(view.created_at)).length} />
-                <DashboardMetric label="Views 7 days" value={pageViews.filter((view) => isWithin(view.created_at, 7)).length} />
-                <DashboardMetric label="QR uses" value={usageLogs.length} />
-                <DashboardMetric label="QR conversion" value={`${qrConversion}%`} />
-                <DashboardMetric label="Get pass clicks" value={clickCount("get_pass_click")} />
-                <DashboardMetric label="Maps clicks" value={clickCount("maps_click")} />
-                <DashboardMetric label="Instagram clicks" value={clickCount("instagram_click")} />
-                <DashboardMetric label="Website clicks" value={clickCount("website_click")} />
+                <DashboardMetric label={t.metrics.pageViews} value={pageViews.length} />
+                <DashboardMetric label={t.metrics.viewsToday} value={pageViews.filter((view) => isToday(view.created_at)).length} />
+                <DashboardMetric label={t.metrics.views7Days} value={pageViews.filter((view) => isWithin(view.created_at, 7)).length} />
+                <DashboardMetric label={t.metrics.qrUses} value={usageLogs.length} />
+                <DashboardMetric label={t.metrics.qrConversion} value={`${qrConversion}%`} />
+                <DashboardMetric label={t.metrics.getPassClicks} value={clickCount("get_pass_click")} />
+                <DashboardMetric label={t.metrics.mapsClicks} value={clickCount("maps_click")} />
+                <DashboardMetric label={t.metrics.instagramClicks} value={clickCount("instagram_click")} />
+                <DashboardMetric label={t.metrics.websiteClicks} value={clickCount("website_click")} />
               </div>
             </Panel>
 
-            <Panel title="Profile completeness">
+            <Panel title={t.panels.completeness}>
               <div className="mb-5 rounded-[1.4rem] bg-white/[0.06] p-5">
                 <p className="text-sm font-black uppercase tracking-[0.22em] text-zinc-500">
-                  Completion
+                  {t.completion}
                 </p>
                 <p className="mt-2 text-5xl font-black">{profileCompletion}%</p>
               </div>
@@ -969,49 +999,50 @@ export default async function PartnerDashboardTokenPage({
                           : "bg-white/10 text-zinc-500"
                       }`}
                     >
-                      {check.ok ? "ready" : "missing"}
+                      {check.ok ? t.ready : t.missing}
                     </span>
                   </div>
                 ))}
               </div>
             </Panel>
 
-            <Panel title="Menu quality">
+            <Panel title={t.panels.menuQuality}>
               <div className="grid gap-3 sm:grid-cols-3">
-                <DashboardMetric label="Total items" value={items.length} />
-                <DashboardMetric label="Visible items" value={visibleItems.length} />
-                <DashboardMetric label="With images" value={menuItemsWithImages.length} />
+                <DashboardMetric label={t.metrics.totalItems} value={items.length} />
+                <DashboardMetric label={t.metrics.visibleItems} value={visibleItems.length} />
+                <DashboardMetric label={t.metrics.withImages} value={menuItemsWithImages.length} />
               </div>
               <p className="mt-5 rounded-2xl bg-black/40 p-4 text-sm font-bold leading-6 text-zinc-400">
-                Add photos, prices and short descriptions to make the public menu feel
-                closer to a premium city guide.
+                {t.menuQualityText}
               </p>
             </Panel>
 
-            <Panel title="Active promotions">
+            <Panel title={t.panels.promotions}>
               <form action={addPromotion} className="grid gap-4">
-                <input type="hidden" name="partner_id" value={partner.id} />
-                <input type="hidden" name="token" value={partner.edit_token} />
-                <Field label="Promotion title">
+                <input suppressHydrationWarning type="hidden" name="partner_id" value={partner.id} />
+                <input suppressHydrationWarning type="hidden" name="token" value={partner.edit_token} />
+                <Field label={t.fields.promotionTitle}>
                   <input
+        suppressHydrationWarning
                     name="title"
                     type="text"
                     required
-                    placeholder="Free dessert for TLN Pass members"
+                    placeholder={t.placeholders.promotionTitle}
                     className="field"
                   />
                 </Field>
-                <Field label="Type">
-                  <select name="promotion_type" defaultValue="discount" className="field">
+                <Field label={t.fields.type}>
+                  <select suppressHydrationWarning name="promotion_type" defaultValue="discount" className="field">
                     {promotionTypes.map((type) => (
                       <option key={type} value={type}>
-                        {type}
+                        {copyValue(t.promotionTypes, type)}
                       </option>
                     ))}
                   </select>
                 </Field>
-                <Field label="Description">
+                <Field label={t.fields.description}>
                   <textarea
+        suppressHydrationWarning
                     name="description"
                     rows={3}
                     maxLength={280}
@@ -1019,21 +1050,21 @@ export default async function PartnerDashboardTokenPage({
                   />
                 </Field>
                 <div className="grid gap-4 sm:grid-cols-2">
-                  <Field label="Starts at">
-                    <input name="starts_at" type="datetime-local" className="field" />
+                  <Field label={t.fields.startsAt}>
+                    <input suppressHydrationWarning name="starts_at" type="datetime-local" className="field" />
                   </Field>
-                  <Field label="Ends at">
-                    <input name="ends_at" type="datetime-local" className="field" />
+                  <Field label={t.fields.endsAt}>
+                    <input suppressHydrationWarning name="ends_at" type="datetime-local" className="field" />
                   </Field>
                 </div>
-                <Field label="Status">
-                  <select name="is_active" defaultValue="true" className="field">
-                    <option value="true">active</option>
-                    <option value="false">hidden</option>
+                <Field label={t.fields.status}>
+                  <select suppressHydrationWarning name="is_active" defaultValue="true" className="field">
+                    <option value="true">{t.statusOptions.active}</option>
+                    <option value="false">{t.statusOptions.hidden}</option>
                   </select>
                 </Field>
                 <button className="rounded-full bg-emerald-400 px-8 py-5 font-black text-black transition hover:-translate-y-0.5">
-                  Save promotion
+                  {t.buttons.savePromotion}
                 </button>
               </form>
 
@@ -1047,7 +1078,9 @@ export default async function PartnerDashboardTokenPage({
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-500">
-                            {promotion.promotion_type || "promotion"}
+                            {promotion.promotion_type
+                              ? copyValue(t.promotionTypes, promotion.promotion_type)
+                              : t.panels.promotions}
                           </p>
                           <h3 className="mt-2 text-xl font-black">
                             {promotion.title}
@@ -1059,16 +1092,17 @@ export default async function PartnerDashboardTokenPage({
                           )}
                         </div>
                         <form action={togglePromotion}>
-                          <input type="hidden" name="partner_id" value={partner.id} />
-                          <input type="hidden" name="token" value={partner.edit_token} />
-                          <input type="hidden" name="promotion_id" value={promotion.id} />
+                          <input suppressHydrationWarning type="hidden" name="partner_id" value={partner.id} />
+                          <input suppressHydrationWarning type="hidden" name="token" value={partner.edit_token} />
+                          <input suppressHydrationWarning type="hidden" name="promotion_id" value={promotion.id} />
                           <input
+        suppressHydrationWarning
                             type="hidden"
                             name="is_active"
                             value={promotion.is_active === false ? "true" : "false"}
                           />
                           <button className="rounded-full bg-white px-4 py-2 text-xs font-black text-black">
-                            {promotion.is_active === false ? "Show" : "Hide"}
+                            {promotion.is_active === false ? t.buttons.show : t.buttons.hide}
                           </button>
                         </form>
                       </div>
@@ -1076,7 +1110,7 @@ export default async function PartnerDashboardTokenPage({
                   ))
                 ) : (
                   <p className="rounded-2xl bg-black/40 p-5 text-sm font-bold text-zinc-500">
-                    No promotions yet.
+                    {t.noPromotions}
                   </p>
                 )}
               </div>
@@ -1091,17 +1125,19 @@ export default async function PartnerDashboardTokenPage({
                 />
               ) : (
                 <div className="grid h-72 place-items-center bg-gradient-to-br from-zinc-700 via-zinc-900 to-black text-sm font-black uppercase tracking-[0.24em] text-zinc-500">
-                  Cover image
+                  {t.coverImage}
                 </div>
               )}
 
               <div className="p-7">
                 <div className="mb-4 inline-flex rounded-full bg-emerald-400 px-4 py-2 text-sm font-black text-black">
-                  {partner.offer || "TLN Pass offer"}
+                  {partner.offer || t.fallbackOffer}
                 </div>
 
                 <h2 className="text-4xl font-black">{partner.business_name}</h2>
-                <p className="mt-2 text-zinc-500">{partner.category}</p>
+                <p className="mt-2 text-zinc-500">
+                  {copyValue(categoryCopy, partner.category)}
+                </p>
 
                 {partner.description && (
                   <p className="mt-5 leading-7 text-zinc-400">
@@ -1111,7 +1147,7 @@ export default async function PartnerDashboardTokenPage({
               </div>
             </div>
 
-            <Panel title={`Menu (${items.length})`}>
+            <Panel title={`${t.panels.menu} (${items.length})`}>
               <div className="space-y-4">
                 {items.length > 0 ? (
                   items.map((item) => (
@@ -1123,7 +1159,7 @@ export default async function PartnerDashboardTokenPage({
                         <div>
                           <div className="mb-2 flex flex-wrap gap-2">
                             <span className="rounded-full bg-white/[0.08] px-3 py-1 text-xs font-black text-zinc-300">
-                              {item.category || "main"}
+                              {copyValue(t.menuCategories, item.category || "main")}
                             </span>
                             <span
                               className={`rounded-full px-3 py-1 text-xs font-black ${
@@ -1133,8 +1169,8 @@ export default async function PartnerDashboardTokenPage({
                               }`}
                             >
                               {item.is_available === false || item.is_active === false
-                                ? "hidden"
-                                : "visible"}
+                                ? t.hidden
+                                : t.visible}
                             </span>
                           </div>
 
@@ -1173,41 +1209,42 @@ export default async function PartnerDashboardTokenPage({
                           />
                         ) : (
                           <div className="grid h-28 place-items-center rounded-[1.2rem] bg-gradient-to-br from-zinc-700 via-zinc-900 to-black text-xs font-black uppercase tracking-[0.18em] text-zinc-600">
-                            Image
+                            {t.image}
                           </div>
                         )}
                       </div>
 
                       <div className="mt-4 flex flex-wrap gap-2">
                         <form action={toggleMenuItem}>
-                          <input type="hidden" name="partner_id" value={partner.id} />
-                          <input type="hidden" name="token" value={partner.edit_token} />
-                          <input type="hidden" name="item_id" value={item.id} />
+                          <input suppressHydrationWarning type="hidden" name="partner_id" value={partner.id} />
+                          <input suppressHydrationWarning type="hidden" name="token" value={partner.edit_token} />
+                          <input suppressHydrationWarning type="hidden" name="item_id" value={item.id} />
                           <input
+        suppressHydrationWarning
                             type="hidden"
                             name="visible"
                             value={item.is_available === false || item.is_active === false ? "true" : "false"}
                           />
                           <button className="rounded-full bg-white px-4 py-2 text-xs font-black text-black">
                             {item.is_available === false || item.is_active === false
-                              ? "Show item"
-                              : "Hide item"}
+                              ? t.buttons.showItem
+                              : t.buttons.hideItem}
                           </button>
                         </form>
 
                         <form action={deleteMenuItem}>
-                          <input type="hidden" name="partner_id" value={partner.id} />
-                          <input type="hidden" name="token" value={partner.edit_token} />
-                          <input type="hidden" name="item_id" value={item.id} />
+                          <input suppressHydrationWarning type="hidden" name="partner_id" value={partner.id} />
+                          <input suppressHydrationWarning type="hidden" name="token" value={partner.edit_token} />
+                          <input suppressHydrationWarning type="hidden" name="item_id" value={item.id} />
                           <button className="rounded-full border border-red-400/20 px-4 py-2 text-xs font-black text-red-300 hover:bg-red-400 hover:text-black">
-                            Delete item
+                            {t.buttons.deleteItem}
                           </button>
                         </form>
                       </div>
 
                       <details className="mt-4 rounded-[1.4rem] border border-white/10 bg-black/40 p-4">
                         <summary className="cursor-pointer text-sm font-black text-zinc-300">
-                          Edit item
+                          {t.buttons.editItem}
                         </summary>
 
                         <div className="mt-5">
@@ -1215,7 +1252,9 @@ export default async function PartnerDashboardTokenPage({
                             action={updateMenuItem}
                             partner={partner}
                             item={item}
-                            buttonLabel="Save item"
+                            buttonLabel={t.buttons.saveItem}
+                            copy={t}
+                            imageCopy={imageCopy}
                           />
                         </div>
                       </details>
@@ -1223,7 +1262,7 @@ export default async function PartnerDashboardTokenPage({
                   ))
                 ) : (
                   <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
-                    No products yet. Add your first item on the left.
+                    {t.noProducts}
                   </div>
                 )}
               </div>
@@ -1256,22 +1295,27 @@ function MenuItemForm({
   partner,
   item,
   buttonLabel,
+  copy,
+  imageCopy,
 }: {
   action: (formData: FormData) => Promise<void>;
   partner: Partner;
   item?: MenuItem;
   buttonLabel: string;
+  copy: PartnerDashboardCopy;
+  imageCopy: ImageInputCopy;
 }) {
   const defaultDiscountType = item?.discount_type || "none";
 
   return (
     <form action={action} className="space-y-5">
-      <input type="hidden" name="partner_id" value={partner.id} />
-      <input type="hidden" name="token" value={partner.edit_token} />
-      {item && <input type="hidden" name="item_id" value={item.id} />}
+      <input suppressHydrationWarning type="hidden" name="partner_id" value={partner.id} />
+      <input suppressHydrationWarning type="hidden" name="token" value={partner.edit_token} />
+      {item && <input suppressHydrationWarning type="hidden" name="item_id" value={item.id} />}
 
-      <Field label="Item name">
+      <Field label={copy.fields.itemName}>
         <input
+        suppressHydrationWarning
           name="name"
           type="text"
           required
@@ -1280,8 +1324,9 @@ function MenuItemForm({
         />
       </Field>
 
-      <Field label="Menu category">
+      <Field label={copy.fields.menuCategory}>
         <select
+        suppressHydrationWarning
           name="category"
           defaultValue={item?.category || "main"}
           required
@@ -1289,16 +1334,17 @@ function MenuItemForm({
         >
           {menuCategories.map((category) => (
             <option key={category} value={category}>
-              {category}
+              {copyValue(copy.menuCategories, category)}
             </option>
           ))}
         </select>
       </Field>
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Price">
+        <Field label={copy.fields.price}>
           <div className="flex overflow-hidden rounded-2xl border border-white/10 bg-black focus-within:border-white/35">
             <input
+        suppressHydrationWarning
               name="price"
               type="text"
               inputMode="decimal"
@@ -1314,9 +1360,10 @@ function MenuItemForm({
           </div>
         </Field>
 
-        <Field label="Old price">
+        <Field label={copy.fields.oldPrice}>
           <div className="flex overflow-hidden rounded-2xl border border-white/10 bg-black focus-within:border-white/35">
             <input
+        suppressHydrationWarning
               name="old_price"
               type="text"
               inputMode="decimal"
@@ -1336,10 +1383,12 @@ function MenuItemForm({
         defaultType={defaultDiscountType}
         defaultValue={item?.discount_value}
         defaultCustom={item?.discount_custom}
+        copy={copy.discount}
       />
 
-      <Field label="Description">
+      <Field label={copy.fields.description}>
         <textarea
+        suppressHydrationWarning
           name="description"
           rows={4}
           maxLength={220}
@@ -1350,8 +1399,9 @@ function MenuItemForm({
 
       <ImagePreviewInput
         name="image"
-        label="Menu item image"
+        label={copy.fields.itemImage}
         currentUrl={item?.image_url}
+        copy={imageCopy}
       />
 
       <button

@@ -1,6 +1,12 @@
+import { cookies } from "next/headers";
 import Link from "next/link";
+import { launchCopy, normalizeLang } from "../../../lib/i18n";
 
-export default function WaitlistSuccessPage() {
+export default async function WaitlistSuccessPage() {
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = launchCopy[lang].waitlistSuccess;
+
   return (
     <main className="min-h-screen bg-black px-6 py-24 text-white">
       <section className="mx-auto max-w-3xl text-center">
@@ -9,23 +15,22 @@ export default function WaitlistSuccessPage() {
         </div>
 
         <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-          You are on the list
+          {t.eyebrow}
         </p>
 
         <h1 className="mt-4 text-6xl font-black tracking-tight md:text-8xl">
-          Welcome to TLN Pass.
+          {t.title}
         </h1>
 
         <p className="mt-8 text-xl leading-8 text-zinc-400">
-          Your waitlist request was saved. We will notify you when early access
-          becomes available.
+          {t.text}
         </p>
 
         <Link
           href="/"
           className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
         >
-          Back to home
+          {t.home}
         </Link>
       </section>
     </main>

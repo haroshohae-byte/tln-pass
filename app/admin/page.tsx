@@ -4,7 +4,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import CopyButton from "../components/CopyButton";
-import { normalizeLang, type Lang } from "../../lib/i18n";
+import { dictionary, normalizeLang, type Lang } from "../../lib/i18n";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
 export const runtime = "nodejs";
@@ -129,9 +129,149 @@ const adminCopy = {
     search: "Search",
     status: "Status",
     category: "Category",
+    filter: "Filter",
     logout: "Logout",
     copy: "Copy",
     copied: "Copied",
+    admin: "Admin",
+    secretMissingTitle: "Admin secret missing",
+    secretMissingText:
+      "Add ADMIN_SECRET to your environment, restart the server, then open /admin again.",
+    wrongPassword: "Wrong password.",
+    passwordPlaceholder: "Admin secret",
+    login: "Login",
+    controlCenter: "Control center",
+    analyticsEyebrow: "Users, partners, QR, revenue",
+    membersEyebrow: "Search, status, pass access",
+    partnersEyebrow: "Directory, quality, dashboard links",
+    applicationsEyebrow: "Partner requests",
+    settingsEyebrow: "Website controls",
+    totalMembers: "Total members",
+    activeMembers: "Active members",
+    trialMembers: "Trial members",
+    canceledMembers: "Canceled members",
+    totalPartners: "Total partners",
+    approvedPartners: "Approved partners",
+    pendingPartners: "Pending partners",
+    hiddenPartners: "Hidden partners",
+    rejectedPartners: "Rejected partners",
+    waitingApplications: "Waiting applications",
+    partnersMissingInfo: "Partners missing info",
+    totalQrScans: "Total QR scans",
+    todayQrScans: "Today QR scans",
+    partnerClicks: "Partner clicks",
+    mrr: "MRR",
+    failedPayments: "Failed payments",
+    userAnalytics: "User analytics",
+    partnerAnalytics: "Partner analytics",
+    qrAnalytics: "QR analytics",
+    revenueAnalytics: "Revenue analytics",
+    newToday: "New today",
+    new7Days: "New 7 days",
+    newMonth: "New month",
+    inactive: "Inactive",
+    canceled: "Canceled",
+    trial: "Trial",
+    pageViews: "Page views",
+    buttonClicks: "Button clicks",
+    mapsClicks: "Maps clicks",
+    getPassClicks: "Get pass clicks",
+    mostPopularPartners: "Most popular partners",
+    mostClickedPartners: "Most clicked partners",
+    noPageViews: "No page views",
+    highViewsLowQr: "High views, low QR",
+    views: "views",
+    noDataYet: "No data yet.",
+    today: "Today",
+    sevenDays: "7 days",
+    thirtyDays: "30 days",
+    allTime: "All time",
+    partnerName: "Partner name",
+    unknownPartner: "Unknown partner",
+    notLinked: "not linked",
+    pass: "Pass",
+    device: "Device",
+    notTrackedYet: "not tracked yet",
+    noQrLogs: "No QR logs for this period.",
+    totalRevenue: "Total revenue",
+    todayRevenue: "Today revenue",
+    monthRevenue: "Month revenue",
+    mrrForecast: "MRR forecast",
+    refunds: "Refunds",
+    avgRevenueUser: "Avg revenue/user",
+    canceledSubs: "Canceled subs",
+    revenueWebhook: "Stripe webhook",
+    revenueWarning:
+      "Accurate revenue analytics needs Stripe webhook events for paid invoices, refunds, cancellations and failed payments.",
+    resetDeviceLock: "Reset device lock",
+    openPass: "Open pass",
+    noMembersFound: "No members found.",
+    registered: "Registered",
+    validUntil: "Valid until",
+    linked: "linked",
+    payment: "Payment",
+    noEmail: "No email",
+    noPlan: "no plan",
+    copyPassCode: "Copy pass code",
+    menuItems: "Menu items",
+    qrUses: "QR uses",
+    checklist: {
+      photo: "photo",
+      address: "address",
+      offer: "offer",
+      hours: "hours",
+      phone: "phone",
+      website: "website",
+      instagram: "instagram",
+      menu: "menu",
+    },
+    copyDashboardLink: "Copy dashboard link",
+    newDashboardLink: "New dashboard link",
+    noPartnersFound: "No partners found.",
+    businessName: "Business name",
+    slugPlaceholder: "slug-example",
+    offerPlaceholder: "Offer",
+    createPartner: "Create partner",
+    application: "Application",
+    emailPartner: "Email partner",
+    noApplicationsYet: "No applications yet.",
+    enabled: "enabled",
+    disabled: "disabled",
+    allStatuses: "all statuses",
+    allCategories: "all categories",
+    noCategory: "No category",
+    noAddress: "No address",
+    contact: "Contact",
+    email: "Email",
+    phone: "Phone",
+    address: "Address",
+    date: "Date",
+    statusLabels: {
+      active: "Active",
+      trialing: "Trialing",
+      inactive: "Inactive",
+      canceled: "Canceled",
+      past_due: "Past due",
+      approved: "Approved",
+      pending: "Pending",
+      hidden: "Hidden",
+      rejected: "Rejected",
+      allowed: "Allowed",
+      denied: "Denied",
+      expired: "Expired",
+      "already used": "Already used",
+      invalid: "Invalid",
+      unknown: "Unknown",
+    },
+    categoryLabels: {
+      restaurants: "Restaurants",
+      cafes: "Cafes",
+      bars: "Bars",
+      fitness: "Fitness",
+      beauty: "Beauty",
+      entertainment: "Entertainment",
+      events: "Events",
+    },
   },
   ru: {
     dashboard: "Панель",
@@ -156,9 +296,149 @@ const adminCopy = {
     search: "Поиск",
     status: "Статус",
     category: "Категория",
+    filter: "Фильтр",
     logout: "Выйти",
     copy: "Копировать",
     copied: "Скопировано",
+    admin: "Админ",
+    secretMissingTitle: "Admin secret не найден",
+    secretMissingText:
+      "Добавьте ADMIN_SECRET в окружение, перезапустите сервер и снова откройте /admin.",
+    wrongPassword: "Неверный пароль.",
+    passwordPlaceholder: "Admin secret",
+    login: "Войти",
+    controlCenter: "Центр управления",
+    analyticsEyebrow: "Пользователи, партнёры, QR, доход",
+    membersEyebrow: "Поиск, статус, доступ к pass",
+    partnersEyebrow: "Каталог, качество, dashboard-ссылки",
+    applicationsEyebrow: "Заявки партнёров",
+    settingsEyebrow: "Настройки сайта",
+    totalMembers: "Всего участников",
+    activeMembers: "Активные участники",
+    trialMembers: "Пробные участники",
+    canceledMembers: "Отменённые участники",
+    totalPartners: "Всего партнёров",
+    approvedPartners: "Одобренные партнёры",
+    pendingPartners: "Ожидают",
+    hiddenPartners: "Скрытые партнёры",
+    rejectedPartners: "Отклонённые партнёры",
+    waitingApplications: "Заявки в ожидании",
+    partnersMissingInfo: "Партнёры без данных",
+    totalQrScans: "Всего QR-сканов",
+    todayQrScans: "QR-сканы сегодня",
+    partnerClicks: "Клики партнёров",
+    mrr: "MRR",
+    failedPayments: "Неудачные платежи",
+    userAnalytics: "Аналитика пользователей",
+    partnerAnalytics: "Аналитика партнёров",
+    qrAnalytics: "QR аналитика",
+    revenueAnalytics: "Аналитика дохода",
+    newToday: "Новые сегодня",
+    new7Days: "Новые за 7 дней",
+    newMonth: "Новые за месяц",
+    inactive: "Неактивные",
+    canceled: "Отменённые",
+    trial: "Пробные",
+    pageViews: "Просмотры страниц",
+    buttonClicks: "Клики кнопок",
+    mapsClicks: "Клики Maps",
+    getPassClicks: "Клики Get pass",
+    mostPopularPartners: "Самые популярные партнёры",
+    mostClickedPartners: "Самые кликаемые партнёры",
+    noPageViews: "Нет просмотров",
+    highViewsLowQr: "Много просмотров, мало QR",
+    views: "просмотров",
+    noDataYet: "Данных пока нет.",
+    today: "Сегодня",
+    sevenDays: "7 дней",
+    thirtyDays: "30 дней",
+    allTime: "Всё время",
+    partnerName: "Название партнёра",
+    unknownPartner: "Неизвестный партнёр",
+    notLinked: "не связан",
+    pass: "Pass",
+    device: "Устройство",
+    notTrackedYet: "пока не отслежено",
+    noQrLogs: "Нет QR-логов за этот период.",
+    totalRevenue: "Общий доход",
+    todayRevenue: "Доход сегодня",
+    monthRevenue: "Доход за месяц",
+    mrrForecast: "Прогноз MRR",
+    refunds: "Возвраты",
+    avgRevenueUser: "Средний доход/пользователь",
+    canceledSubs: "Отменённые подписки",
+    revenueWebhook: "Stripe webhook",
+    revenueWarning:
+      "Точная аналитика дохода требует Stripe webhook events для оплаченных invoices, возвратов, отмен и неудачных платежей.",
+    resetDeviceLock: "Сбросить привязку устройства",
+    openPass: "Открыть pass",
+    noMembersFound: "Участники не найдены.",
+    registered: "Регистрация",
+    validUntil: "Действует до",
+    linked: "связано",
+    payment: "Платёж",
+    noEmail: "Нет email",
+    noPlan: "нет тарифа",
+    copyPassCode: "Копировать код pass",
+    menuItems: "Пункты меню",
+    qrUses: "QR-использования",
+    checklist: {
+      photo: "фото",
+      address: "адрес",
+      offer: "оффер",
+      hours: "часы",
+      phone: "телефон",
+      website: "сайт",
+      instagram: "instagram",
+      menu: "меню",
+    },
+    copyDashboardLink: "Копировать dashboard-ссылку",
+    newDashboardLink: "Новая dashboard-ссылка",
+    noPartnersFound: "Партнёры не найдены.",
+    businessName: "Название бизнеса",
+    slugPlaceholder: "slug-example",
+    offerPlaceholder: "Оффер",
+    createPartner: "Создать партнёра",
+    application: "Заявка",
+    emailPartner: "Написать партнёру",
+    noApplicationsYet: "Заявок пока нет.",
+    enabled: "включено",
+    disabled: "выключено",
+    allStatuses: "все статусы",
+    allCategories: "все категории",
+    noCategory: "Нет категории",
+    noAddress: "Нет адреса",
+    contact: "Контакт",
+    email: "Email",
+    phone: "Телефон",
+    address: "Адрес",
+    date: "Дата",
+    statusLabels: {
+      active: "Активный",
+      trialing: "Пробный",
+      inactive: "Неактивный",
+      canceled: "Отменён",
+      past_due: "Просрочен",
+      approved: "Одобрен",
+      pending: "Ожидает",
+      hidden: "Скрыт",
+      rejected: "Отклонён",
+      allowed: "Разрешён",
+      denied: "Отклонён",
+      expired: "Истёк",
+      "already used": "Уже использован",
+      invalid: "Недействителен",
+      unknown: "Неизвестно",
+    },
+    categoryLabels: {
+      restaurants: "Рестораны",
+      cafes: "Кафе",
+      bars: "Бары",
+      fitness: "Фитнес",
+      beauty: "Красота",
+      entertainment: "Развлечения",
+      events: "События",
+    },
   },
   ee: {
     dashboard: "Töölaud",
@@ -183,11 +463,162 @@ const adminCopy = {
     search: "Otsi",
     status: "Staatus",
     category: "Kategooria",
+    filter: "Filtreeri",
     logout: "Logi välja",
     copy: "Kopeeri",
     copied: "Kopeeritud",
+    admin: "Admin",
+    secretMissingTitle: "Admin secret puudub",
+    secretMissingText:
+      "Lisa ADMIN_SECRET keskkonda, käivita server uuesti ja ava /admin uuesti.",
+    wrongPassword: "Vale parool.",
+    passwordPlaceholder: "Admin secret",
+    login: "Logi sisse",
+    controlCenter: "Juhtimiskeskus",
+    analyticsEyebrow: "Kasutajad, partnerid, QR, tulu",
+    membersEyebrow: "Otsing, staatus, passi ligipääs",
+    partnersEyebrow: "Kataloog, kvaliteet, dashboardi lingid",
+    applicationsEyebrow: "Partneritaotlused",
+    settingsEyebrow: "Saidi seaded",
+    totalMembers: "Liikmeid kokku",
+    activeMembers: "Aktiivsed liikmed",
+    trialMembers: "Prooviliikmed",
+    canceledMembers: "Tühistatud liikmed",
+    totalPartners: "Partnereid kokku",
+    approvedPartners: "Kinnitatud partnerid",
+    pendingPartners: "Ootel partnerid",
+    hiddenPartners: "Peidetud partnerid",
+    rejectedPartners: "Tagasi lükatud partnerid",
+    waitingApplications: "Ootel taotlused",
+    partnersMissingInfo: "Puuduliku infoga partnerid",
+    totalQrScans: "QR-skaneeringuid kokku",
+    todayQrScans: "QR-skaneeringud täna",
+    partnerClicks: "Partnerite klikid",
+    mrr: "MRR",
+    failedPayments: "Ebaõnnestunud maksed",
+    userAnalytics: "Kasutajate analüütika",
+    partnerAnalytics: "Partnerite analüütika",
+    qrAnalytics: "QR analüütika",
+    revenueAnalytics: "Tulu analüütika",
+    newToday: "Uued täna",
+    new7Days: "Uued 7 päeva",
+    newMonth: "Uued kuus",
+    inactive: "Mitteaktiivsed",
+    canceled: "Tühistatud",
+    trial: "Proov",
+    pageViews: "Lehe vaatamised",
+    buttonClicks: "Nupuklikid",
+    mapsClicks: "Maps klikid",
+    getPassClicks: "Get pass klikid",
+    mostPopularPartners: "Kõige populaarsemad partnerid",
+    mostClickedPartners: "Kõige klikitumad partnerid",
+    noPageViews: "Lehevaatamisi pole",
+    highViewsLowQr: "Palju vaatamisi, vähe QR-i",
+    views: "vaatamist",
+    noDataYet: "Andmeid veel pole.",
+    today: "Täna",
+    sevenDays: "7 päeva",
+    thirtyDays: "30 päeva",
+    allTime: "Kogu aeg",
+    partnerName: "Partneri nimi",
+    unknownPartner: "Tundmatu partner",
+    notLinked: "pole seotud",
+    pass: "Pass",
+    device: "Seade",
+    notTrackedYet: "pole veel jälgitud",
+    noQrLogs: "Selle perioodi QR-logisid pole.",
+    totalRevenue: "Kogutulu",
+    todayRevenue: "Tänane tulu",
+    monthRevenue: "Kuu tulu",
+    mrrForecast: "MRR prognoos",
+    refunds: "Tagastused",
+    avgRevenueUser: "Keskmine tulu/kasutaja",
+    canceledSubs: "Tühistatud tellimused",
+    revenueWebhook: "Stripe webhook",
+    revenueWarning:
+      "Täpne tuluanalüütika vajab Stripe webhook sündmusi makstud arvete, tagastuste, tühistamiste ja ebaõnnestunud maksete jaoks.",
+    resetDeviceLock: "Lähtesta seadmelukk",
+    openPass: "Ava pass",
+    noMembersFound: "Liikmeid ei leitud.",
+    registered: "Registreeritud",
+    validUntil: "Kehtib kuni",
+    linked: "seotud",
+    payment: "Makse",
+    noEmail: "Email puudub",
+    noPlan: "paketti pole",
+    copyPassCode: "Kopeeri passikood",
+    menuItems: "Menüü kirjed",
+    qrUses: "QR kasutused",
+    checklist: {
+      photo: "foto",
+      address: "aadress",
+      offer: "pakkumine",
+      hours: "ajad",
+      phone: "telefon",
+      website: "veeb",
+      instagram: "instagram",
+      menu: "menüü",
+    },
+    copyDashboardLink: "Kopeeri dashboardi link",
+    newDashboardLink: "Uus dashboardi link",
+    noPartnersFound: "Partnereid ei leitud.",
+    businessName: "Äri nimi",
+    slugPlaceholder: "slug-example",
+    offerPlaceholder: "Pakkumine",
+    createPartner: "Loo partner",
+    application: "Taotlus",
+    emailPartner: "Kirjuta partnerile",
+    noApplicationsYet: "Taotlusi veel pole.",
+    enabled: "lubatud",
+    disabled: "keelatud",
+    allStatuses: "kõik staatused",
+    allCategories: "kõik kategooriad",
+    noCategory: "Kategooriat pole",
+    noAddress: "Aadress puudub",
+    contact: "Kontakt",
+    email: "Email",
+    phone: "Telefon",
+    address: "Aadress",
+    date: "Kuupäev",
+    statusLabels: {
+      active: "Aktiivne",
+      trialing: "Proov",
+      inactive: "Mitteaktiivne",
+      canceled: "Tühistatud",
+      past_due: "Maksetähtaeg möödas",
+      approved: "Kinnitatud",
+      pending: "Ootel",
+      hidden: "Peidetud",
+      rejected: "Tagasi lükatud",
+      allowed: "Lubatud",
+      denied: "Keelatud",
+      expired: "Aegunud",
+      "already used": "Juba kasutatud",
+      invalid: "Kehtetu",
+      unknown: "Teadmata",
+    },
+    categoryLabels: {
+      restaurants: "Restoranid",
+      cafes: "Kohvikud",
+      bars: "Baarid",
+      fitness: "Fitness",
+      beauty: "Ilu",
+      entertainment: "Meelelahutus",
+      events: "Üritused",
+    },
   },
 } as const;
+
+type AdminText = (typeof adminCopy)[Lang];
+
+function adminStatusLabel(t: AdminText, status?: string | null) {
+  const value = String(status || "unknown");
+  return t.statusLabels[value as keyof typeof t.statusLabels] || value;
+}
+
+function adminCategoryLabel(t: AdminText, category: string) {
+  return t.categoryLabels[category as keyof typeof t.categoryLabels] || category;
+}
 
 const memberStatuses = ["active", "trialing", "inactive", "canceled", "past_due"];
 const partnerStatuses = ["approved", "pending", "hidden", "rejected"];
@@ -752,15 +1183,15 @@ export default async function AdminPage({
   const cookieStore = await cookies();
   const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
   const t = adminCopy[lang as Lang];
+  const planText = dictionary[lang].plans.items;
 
   if (!secret) {
     return (
       <main className="min-h-screen bg-[#f5f5f7] px-5 py-16 text-[#1d1d1f]">
         <section className="mx-auto max-w-2xl rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
-          <h1 className="text-4xl font-black">Admin secret missing</h1>
+          <h1 className="text-4xl font-black">{t.secretMissingTitle}</h1>
           <p className="mt-4 leading-7 text-zinc-600">
-            Add <b>ADMIN_SECRET</b> to your environment, restart the server,
-            then open /admin again.
+            {t.secretMissingText}
           </p>
         </section>
       </main>
@@ -775,25 +1206,28 @@ export default async function AdminPage({
             TLN Pass
           </p>
 
-          <h1 className="mt-4 text-5xl font-black tracking-tight">Admin</h1>
+          <h1 className="mt-4 text-5xl font-black tracking-tight">
+            {t.admin}
+          </h1>
 
           {params.error && (
             <p className="mt-4 rounded-2xl bg-red-50 p-4 font-bold text-red-600">
-              Wrong password.
+              {t.wrongPassword}
             </p>
           )}
 
           <form action={adminLogin} className="mt-6 grid gap-4">
             <input
+        suppressHydrationWarning
               name="password"
               type="password"
-              placeholder="Admin secret"
+              placeholder={t.passwordPlaceholder}
               className="rounded-2xl border border-black/10 bg-zinc-100 px-5 py-4 font-bold outline-none focus:bg-white"
               required
             />
 
             <button className="rounded-full bg-black px-6 py-4 font-black text-white">
-              Login
+              {t.login}
             </button>
           </form>
         </section>
@@ -1030,76 +1464,82 @@ export default async function AdminPage({
         </nav>
 
         <section id="overview" className="mt-8 scroll-mt-28">
-          <SectionHeading title={t.overview} eyebrow="Control center" />
+          <SectionHeading title={t.overview} eyebrow={t.controlCenter} />
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
-            <Stat label="Total members" value={members.length} />
-            <Stat label="Active members" value={activeMembers.length} />
-            <Stat label="Trial members" value={trialMembers.length} />
-            <Stat label="Canceled members" value={canceledMembers.length} />
-            <Stat label="Total partners" value={partners.length} />
-            <Stat label="Approved partners" value={approvedPartners.length} />
-            <Stat label="Pending partners" value={pendingPartners.length} />
-            <Stat label="Hidden partners" value={hiddenPartners.length} />
-            <Stat label="Rejected partners" value={rejectedPartners.length} />
-            <Stat label="Waiting applications" value={waitingApplications.length} />
+            <Stat label={t.totalMembers} value={members.length} />
+            <Stat label={t.activeMembers} value={activeMembers.length} />
+            <Stat label={t.trialMembers} value={trialMembers.length} />
+            <Stat label={t.canceledMembers} value={canceledMembers.length} />
+            <Stat label={t.totalPartners} value={partners.length} />
+            <Stat label={t.approvedPartners} value={approvedPartners.length} />
+            <Stat label={t.pendingPartners} value={pendingPartners.length} />
+            <Stat label={t.hiddenPartners} value={hiddenPartners.length} />
+            <Stat label={t.rejectedPartners} value={rejectedPartners.length} />
+            <Stat label={t.waitingApplications} value={waitingApplications.length} />
             <Stat
-              label="Partners missing info"
+              label={t.partnersMissingInfo}
               value={partnersMissingImportantInfo.length}
               tone="danger"
             />
-            <Stat label="Total QR scans" value={usageLogs.length} />
-            <Stat label="Today QR scans" value={todayQrScans.length} />
-            <Stat label="Partner clicks" value={clickEvents.length} />
-            <Stat label="Revenue" value={euro(revenueEstimate)} />
-            <Stat label="MRR" value={euro(mrrEstimate)} />
-            <Stat label="Failed payments" value={failedPayments.length} tone="danger" />
+            <Stat label={t.totalQrScans} value={usageLogs.length} />
+            <Stat label={t.todayQrScans} value={todayQrScans.length} />
+            <Stat label={t.partnerClicks} value={clickEvents.length} />
+            <Stat label={t.revenue} value={euro(revenueEstimate)} />
+            <Stat label={t.mrr} value={euro(mrrEstimate)} />
+            <Stat label={t.failedPayments} value={failedPayments.length} tone="danger" />
           </div>
         </section>
 
         <section id="analytics" className="mt-10 scroll-mt-28">
-          <SectionHeading title={t.analytics} eyebrow="Users, partners, QR, revenue" />
+          <SectionHeading title={t.analytics} eyebrow={t.analyticsEyebrow} />
           <div className="mt-5 grid gap-6 xl:grid-cols-2">
-            <Panel title="User analytics">
+            <Panel title={t.userAnalytics}>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                <MiniStat label="New today" value={members.filter((m) => isToday(m.created_at)).length} />
-                <MiniStat label="New 7 days" value={members.filter((m) => isWithin(m.created_at, 7)).length} />
-                <MiniStat label="New month" value={members.filter((m) => isWithin(m.created_at, 30)).length} />
-                <MiniStat label="Active" value={activeMembers.length} />
-                <MiniStat label="Inactive" value={members.length - activeMembers.length} />
-                <MiniStat label="Canceled" value={canceledMembers.length} />
-                <MiniStat label="Trial" value={trialMembers.length} />
-                <MiniStat label="14 days" value={planCounts["14day"]} />
-                <MiniStat label="Monthly" value={planCounts.monthly} />
-                <MiniStat label="6 months" value={planCounts["6months"]} />
-                <MiniStat label="Yearly" value={planCounts.yearly} />
+                <MiniStat label={t.newToday} value={members.filter((m) => isToday(m.created_at)).length} />
+                <MiniStat label={t.new7Days} value={members.filter((m) => isWithin(m.created_at, 7)).length} />
+                <MiniStat label={t.newMonth} value={members.filter((m) => isWithin(m.created_at, 30)).length} />
+                <MiniStat label={t.active} value={activeMembers.length} />
+                <MiniStat label={t.inactive} value={members.length - activeMembers.length} />
+                <MiniStat label={t.canceled} value={canceledMembers.length} />
+                <MiniStat label={t.trial} value={trialMembers.length} />
+                <MiniStat label={planText["14day"].duration} value={planCounts["14day"]} />
+                <MiniStat label={planText.monthly.name} value={planCounts.monthly} />
+                <MiniStat label={planText["6months"].name} value={planCounts["6months"]} />
+                <MiniStat label={planText.yearly.name} value={planCounts.yearly} />
               </div>
             </Panel>
 
-            <Panel title="Partner analytics">
+            <Panel title={t.partnerAnalytics}>
               <div className="grid gap-5">
                 <div className="grid gap-3 sm:grid-cols-2">
                   {categoryStats.map((item) => (
-                    <MiniStat key={item.category} label={item.category} value={item.count} />
+                    <MiniStat
+                      key={item.category}
+                      label={adminCategoryLabel(t, item.category)}
+                      value={item.count}
+                    />
                   ))}
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <MiniStat label="Page views" value={pageViews.length} />
-                  <MiniStat label="Button clicks" value={clickEvents.length} />
-                  <MiniStat label="Maps clicks" value={clickTypeBreakdown.get("maps_click") || 0} />
-                  <MiniStat label="Get pass clicks" value={clickTypeBreakdown.get("get_pass_click") || 0} />
+                  <MiniStat label={t.pageViews} value={pageViews.length} />
+                  <MiniStat label={t.buttonClicks} value={clickEvents.length} />
+                  <MiniStat label={t.mapsClicks} value={clickTypeBreakdown.get("maps_click") || 0} />
+                  <MiniStat label={t.getPassClicks} value={clickTypeBreakdown.get("get_pass_click") || 0} />
                 </div>
 
                 <AnalyticsList
-                  title="Most popular partners"
+                  title={t.mostPopularPartners}
+                  emptyText={t.noDataYet}
                   items={popularPartners.map((partner) => ({
                     title: partner.business_name || "Partner",
-                    meta: `${viewCountByPartner.get(partner.id) || 0} views · ${qrCountByPartner.get(partner.id) || 0} QR`,
+                    meta: `${viewCountByPartner.get(partner.id) || 0} ${t.views} · ${qrCountByPartner.get(partner.id) || 0} QR`,
                   }))}
                 />
 
                 <AnalyticsList
-                  title="Most clicked partners"
+                  title={t.mostClickedPartners}
+                  emptyText={t.noDataYet}
                   items={[...partners]
                     .sort(
                       (a, b) =>
@@ -1109,38 +1549,40 @@ export default async function AdminPage({
                     .slice(0, 6)
                     .map((partner) => ({
                       title: partner.business_name || "Partner",
-                      meta: `${clickCountByPartner.get(partner.id) || 0} button clicks`,
+                      meta: `${clickCountByPartner.get(partner.id) || 0} ${t.buttonClicks.toLowerCase()}`,
                     }))}
                 />
 
                 <AnalyticsList
-                  title="No page views"
+                  title={t.noPageViews}
+                  emptyText={t.noDataYet}
                   items={partnersWithoutViews.slice(0, 6).map((partner) => ({
                     title: partner.business_name || "Partner",
-                    meta: partner.category || "No category",
+                    meta: partner.category || t.noCategory,
                   }))}
                 />
 
                 <AnalyticsList
-                  title="High views, low QR"
+                  title={t.highViewsLowQr}
+                  emptyText={t.noDataYet}
                   items={highViewsLowQr.slice(0, 6).map((partner) => ({
                     title: partner.business_name || "Partner",
-                    meta: `${viewCountByPartner.get(partner.id) || 0} views · ${qrCountByPartner.get(partner.id) || 0} QR`,
+                    meta: `${viewCountByPartner.get(partner.id) || 0} ${t.views} · ${qrCountByPartner.get(partner.id) || 0} QR`,
                   }))}
                 />
               </div>
             </Panel>
 
-            <Panel title="QR analytics">
+            <Panel title={t.qrAnalytics}>
               <form className="mb-5 flex flex-wrap gap-2">
-                <select name="qr_range" defaultValue={qrRange} className="input max-w-xs">
-                  <option value="today">today</option>
-                  <option value="7">7 days</option>
-                  <option value="30">30 days</option>
-                  <option value="all">all time</option>
+                <select suppressHydrationWarning name="qr_range" defaultValue={qrRange} className="input max-w-xs">
+                  <option value="today">{t.today}</option>
+                  <option value="7">{t.sevenDays}</option>
+                  <option value="30">{t.thirtyDays}</option>
+                  <option value="all">{t.allTime}</option>
                 </select>
                 <button className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
-                  Filter
+                  {t.filter}
                 </button>
               </form>
 
@@ -1149,7 +1591,7 @@ export default async function AdminPage({
                   (status) => (
                     <MiniStat
                       key={status}
-                      label={status}
+                      label={adminStatusLabel(t, status)}
                       value={qrStatusBreakdown.get(status) || 0}
                     />
                   )
@@ -1161,72 +1603,72 @@ export default async function AdminPage({
                   <div key={log.id} className="rounded-2xl bg-zinc-100 p-4">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <p className="rounded-full bg-white px-4 py-2 text-sm font-black">
-                        {qrStatus(log)}
+                        {adminStatusLabel(t, qrStatus(log))}
                       </p>
                       <p className="text-sm font-bold text-zinc-500">
                         {formatDateTime(log.created_at)}
                       </p>
                     </div>
                     <p className="mt-3 text-sm font-black text-zinc-800">
-                      Partner name:{" "}
+                      {t.partnerName}:{" "}
                       {log.partner_id
-                        ? partnerNameById.get(log.partner_id) || "Unknown partner"
-                        : "not linked"}
+                        ? partnerNameById.get(log.partner_id) || t.unknownPartner
+                        : t.notLinked}
                     </p>
                     <p className="mt-3 text-sm font-bold text-zinc-600">
-                      Partner: {log.partner_id || "not linked"} · Pass:{" "}
+                      {t.partners}: {log.partner_id || t.notLinked} · {t.pass}:{" "}
                       {log.pass_code || log.pass_id || log.member_id || "n/a"}
                     </p>
                     <p className="mt-1 line-clamp-1 text-xs font-bold text-zinc-400">
-                      Device: {log.user_agent || "not tracked yet"}
+                      {t.device}: {log.user_agent || t.notTrackedYet}
                     </p>
                   </div>
                 ))}
                 {filteredQrLogs.length === 0 && (
                   <p className="rounded-2xl bg-zinc-100 p-5 font-bold text-zinc-500">
-                    No QR logs for this period.
+                    {t.noQrLogs}
                   </p>
                 )}
               </div>
             </Panel>
 
-            <Panel title="Revenue analytics">
+            <Panel title={t.revenueAnalytics}>
               <div className="grid gap-4 sm:grid-cols-2">
-                <MiniStat label="Total revenue" value={euro(revenueEstimate)} />
-                <MiniStat label="Today revenue" value="Stripe webhook" />
-                <MiniStat label="Month revenue" value="Stripe webhook" />
-                <MiniStat label="MRR forecast" value={euro(mrrEstimate)} />
-                <MiniStat label="Failed payments" value={failedPayments.length} />
-                <MiniStat label="Refunds" value="Stripe webhook" />
+                <MiniStat label={t.totalRevenue} value={euro(revenueEstimate)} />
+                <MiniStat label={t.todayRevenue} value={t.revenueWebhook} />
+                <MiniStat label={t.monthRevenue} value={t.revenueWebhook} />
+                <MiniStat label={t.mrrForecast} value={euro(mrrEstimate)} />
+                <MiniStat label={t.failedPayments} value={failedPayments.length} />
+                <MiniStat label={t.refunds} value={t.revenueWebhook} />
                 <MiniStat
-                  label="Avg revenue/user"
+                  label={t.avgRevenueUser}
                   value={activeRevenueMembers.length ? euro(revenueEstimate / activeRevenueMembers.length) : euro(0)}
                 />
-                <MiniStat label="Canceled subs" value={canceledMembers.length} />
+                <MiniStat label={t.canceledSubs} value={canceledMembers.length} />
               </div>
               <p className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-800">
-                Accurate revenue analytics needs Stripe webhook events for paid
-                invoices, refunds, cancellations and failed payments.
+                {t.revenueWarning}
               </p>
             </Panel>
           </div>
         </section>
 
         <section id="members" className="mt-10 scroll-mt-28">
-          <SectionHeading title={t.members} eyebrow="Search, status, pass access" />
+          <SectionHeading title={t.members} eyebrow={t.membersEyebrow} />
           <Panel>
-            <FilterForm>
+            <FilterForm label={t.filter}>
               <input
+        suppressHydrationWarning
                 name="member_search"
                 defaultValue={params.member_search || ""}
                 placeholder={`${t.search}: email / pass code`}
                 className="input"
               />
-              <select name="member_status" defaultValue={memberStatusFilter} className="input">
-                <option value="all">all statuses</option>
+              <select suppressHydrationWarning name="member_status" defaultValue={memberStatusFilter} className="input">
+                <option value="all">{t.allStatuses}</option>
                 {memberStatuses.map((status) => (
                   <option key={status} value={status}>
-                    {status}
+                    {adminStatusLabel(t, status)}
                   </option>
                 ))}
               </select>
@@ -1241,16 +1683,16 @@ export default async function AdminPage({
                         <h3 className="text-xl font-black">
                           {member.full_name || member.email || "Member"}
                         </h3>
-                        <Badge>{memberStatus(member)}</Badge>
+                        <Badge>{adminStatusLabel(t, memberStatus(member))}</Badge>
                       </div>
                       <p className="mt-2 text-sm font-bold text-zinc-500">
-                        {member.email || "No email"} · {member.plan_id || member.plan || "no plan"}
+                        {member.email || t.noEmail} · {member.plan_id || member.plan || t.noPlan}
                       </p>
                       <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                        <Info label="Registered" value={formatDate(member.created_at)} />
-                        <Info label="Valid until" value={formatDate(member.valid_until || member.current_period_end)} />
-                        <Info label="Device" value={member.device_hash ? "linked" : "not linked"} />
-                        <Info label="Payment" value={member.last_payment_status || "n/a"} />
+                        <Info label={t.registered} value={formatDate(member.created_at)} />
+                        <Info label={t.validUntil} value={formatDate(member.valid_until || member.current_period_end)} />
+                        <Info label={t.device} value={member.device_hash ? t.linked : t.notLinked} />
+                        <Info label={t.payment} value={member.last_payment_status || "n/a"} />
                       </div>
                       {member.pass_code && (
                         <div className="mt-4 flex flex-wrap items-center gap-3">
@@ -1259,7 +1701,7 @@ export default async function AdminPage({
                           </code>
                           <CopyButton
                             value={member.pass_code}
-                            label="Copy pass code"
+                            label={t.copyPassCode}
                             copiedLabel={t.copied}
                           />
                         </div>
@@ -1268,16 +1710,17 @@ export default async function AdminPage({
 
                     <div className="flex flex-wrap gap-2 xl:justify-end">
                       <form action={updateMemberStatus} className="flex gap-2">
-                        <input type="hidden" name="member_id" value={member.id} />
-                        <input type="hidden" name="member_table" value={memberTable} />
+                        <input suppressHydrationWarning type="hidden" name="member_id" value={member.id} />
+                        <input suppressHydrationWarning type="hidden" name="member_table" value={memberTable} />
                         <select
+        suppressHydrationWarning
                           name="subscription_status"
                           defaultValue={memberStatus(member)}
                           className="rounded-full bg-white px-4 py-3 text-sm font-black"
                         >
                           {memberStatuses.map((status) => (
                             <option key={status} value={status}>
-                              {status}
+                              {adminStatusLabel(t, status)}
                             </option>
                           ))}
                         </select>
@@ -1287,10 +1730,10 @@ export default async function AdminPage({
                       </form>
 
                       <form action={resetDeviceLock}>
-                        <input type="hidden" name="member_id" value={member.id} />
-                        <input type="hidden" name="member_table" value={memberTable} />
+                        <input suppressHydrationWarning type="hidden" name="member_id" value={member.id} />
+                        <input suppressHydrationWarning type="hidden" name="member_table" value={memberTable} />
                         <button className="rounded-full bg-white px-4 py-3 text-sm font-black">
-                          Reset device lock
+                          {t.resetDeviceLock}
                         </button>
                       </form>
 
@@ -1300,42 +1743,43 @@ export default async function AdminPage({
                           target="_blank"
                           className="rounded-full bg-white px-4 py-3 text-sm font-black"
                         >
-                          Open pass
+                          {t.openPass}
                         </a>
                       )}
                     </div>
                   </div>
                 </div>
               ))}
-              {filteredMembers.length === 0 && <EmptyState text="No members found." />}
+              {filteredMembers.length === 0 && <EmptyState text={t.noMembersFound} />}
             </div>
           </Panel>
         </section>
 
         <section id="partners" className="mt-10 scroll-mt-28">
-          <SectionHeading title={t.partners} eyebrow="Directory, quality, dashboard links" />
+          <SectionHeading title={t.partners} eyebrow={t.partnersEyebrow} />
           <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
             <Panel>
-              <FilterForm>
+              <FilterForm label={t.filter}>
                 <input
+        suppressHydrationWarning
                   name="partner_search"
                   defaultValue={params.partner_search || ""}
                   placeholder={`${t.search}: partner`}
                   className="input"
                 />
-                <select name="partner_status" defaultValue={partnerStatusFilter} className="input">
-                  <option value="all">all statuses</option>
+                <select suppressHydrationWarning name="partner_status" defaultValue={partnerStatusFilter} className="input">
+                  <option value="all">{t.allStatuses}</option>
                   {partnerStatuses.map((status) => (
                     <option key={status} value={status}>
-                      {status}
+                      {adminStatusLabel(t, status)}
                     </option>
                   ))}
                 </select>
-                <select name="partner_category" defaultValue={partnerCategoryFilter} className="input">
-                  <option value="all">all categories</option>
+                <select suppressHydrationWarning name="partner_category" defaultValue={partnerCategoryFilter} className="input">
+                  <option value="all">{t.allCategories}</option>
                   {partnerCategories.map((category) => (
                     <option key={category} value={category}>
-                      {category}
+                      {adminCategoryLabel(t, category)}
                     </option>
                   ))}
                 </select>
@@ -1355,7 +1799,7 @@ export default async function AdminPage({
                     ["website", Boolean(partner.website)],
                     ["instagram", Boolean(partner.instagram)],
                     ["menu", (menuCountByPartner.get(partner.id) || 0) > 0],
-                  ];
+                  ] as const;
 
                   return (
                     <div key={partner.id} className="rounded-[1.6rem] bg-zinc-100 p-5">
@@ -1365,10 +1809,10 @@ export default async function AdminPage({
                             <h3 className="text-xl font-black">
                               {partner.business_name || "Partner"}
                             </h3>
-                            <Badge>{partner.status || "unknown"}</Badge>
+                            <Badge>{adminStatusLabel(t, partner.status)}</Badge>
                           </div>
                           <p className="mt-2 text-sm font-bold text-zinc-500">
-                            {partner.category || "No category"} · {partner.address || "No address"}
+                            {partner.category || t.noCategory} · {partner.address || t.noAddress}
                           </p>
                           {partner.offer && (
                             <p className="mt-3 rounded-2xl bg-white p-4 text-sm font-black text-zinc-700">
@@ -1376,9 +1820,9 @@ export default async function AdminPage({
                             </p>
                           )}
                           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-                            <Info label="Menu items" value={String(menuCountByPartner.get(partner.id) || 0)} />
-                            <Info label="QR uses" value={String(qrCountByPartner.get(partner.id) || 0)} />
-                            <Info label="Views" value={String(viewCountByPartner.get(partner.id) || 0)} />
+                            <Info label={t.menuItems} value={String(menuCountByPartner.get(partner.id) || 0)} />
+                            <Info label={t.qrUses} value={String(qrCountByPartner.get(partner.id) || 0)} />
+                            <Info label={t.views} value={String(viewCountByPartner.get(partner.id) || 0)} />
                           </div>
                           <div className="mt-4 flex flex-wrap gap-2">
                             {checklist.map(([label, ok]) => (
@@ -1388,7 +1832,7 @@ export default async function AdminPage({
                                   ok ? "bg-emerald-100 text-emerald-800" : "bg-white text-zinc-400"
                                 }`}
                               >
-                                {ok ? "✓" : "!"} {label}
+                              {ok ? "✓" : "!"} {t.checklist[label as keyof typeof t.checklist]}
                               </span>
                             ))}
                           </div>
@@ -1396,15 +1840,16 @@ export default async function AdminPage({
 
                         <div className="flex flex-wrap gap-2 xl:justify-end">
                           <form action={updatePartnerStatus} className="flex gap-2">
-                            <input type="hidden" name="partner_id" value={partner.id} />
+                            <input suppressHydrationWarning type="hidden" name="partner_id" value={partner.id} />
                             <select
+        suppressHydrationWarning
                               name="status"
                               defaultValue={partner.status || "pending"}
                               className="rounded-full bg-white px-4 py-3 text-sm font-black"
                             >
                               {partnerStatuses.map((status) => (
                                 <option key={status} value={status}>
-                                  {status}
+                                  {adminStatusLabel(t, status)}
                                 </option>
                               ))}
                             </select>
@@ -1434,21 +1879,21 @@ export default async function AdminPage({
                           {absoluteDashboardUrl && (
                             <CopyButton
                               value={absoluteDashboardUrl}
-                              label="Copy dashboard link"
+                              label={t.copyDashboardLink}
                               copiedLabel={t.copied}
                               className="rounded-full bg-white px-4 py-3 text-sm font-black text-black"
                             />
                           )}
 
                           <form action={regeneratePartnerToken}>
-                            <input type="hidden" name="partner_id" value={partner.id} />
+                            <input suppressHydrationWarning type="hidden" name="partner_id" value={partner.id} />
                             <button className="rounded-full bg-white px-4 py-3 text-sm font-black">
-                              New dashboard link
+                              {t.newDashboardLink}
                             </button>
                           </form>
 
                           <form action={deletePartner}>
-                            <input type="hidden" name="partner_id" value={partner.id} />
+                            <input suppressHydrationWarning type="hidden" name="partner_id" value={partner.id} />
                             <button className="rounded-full bg-red-50 px-4 py-3 text-sm font-black text-red-600">
                               {t.delete}
                             </button>
@@ -1458,32 +1903,32 @@ export default async function AdminPage({
                     </div>
                   );
                 })}
-                {filteredPartners.length === 0 && <EmptyState text="No partners found." />}
+                {filteredPartners.length === 0 && <EmptyState text={t.noPartnersFound} />}
               </div>
             </Panel>
 
             <Panel title={t.addPartner}>
               <form action={createPartner} className="grid gap-3">
-                <input name="business_name" placeholder="Business name" className="input" required />
-                <input name="slug" placeholder="slug-example" className="input" />
-                <select name="category" className="input" defaultValue="restaurants">
+                <input suppressHydrationWarning name="business_name" placeholder={t.businessName} className="input" required />
+                <input suppressHydrationWarning name="slug" placeholder={t.slugPlaceholder} className="input" />
+                <select suppressHydrationWarning name="category" className="input" defaultValue="restaurants">
                   {partnerCategories.map((category) => (
                     <option key={category} value={category}>
-                      {category}
+                      {adminCategoryLabel(t, category)}
                     </option>
                   ))}
                 </select>
-                <input name="address" placeholder="Address" className="input" />
-                <input name="offer" placeholder="Offer" className="input" />
-                <select name="status" className="input" defaultValue="approved">
+                <input suppressHydrationWarning name="address" placeholder={t.address} className="input" />
+                <input suppressHydrationWarning name="offer" placeholder={t.offerPlaceholder} className="input" />
+                <select suppressHydrationWarning name="status" className="input" defaultValue="approved">
                   {partnerStatuses.map((status) => (
                     <option key={status} value={status}>
-                      {status}
+                      {adminStatusLabel(t, status)}
                     </option>
                   ))}
                 </select>
                 <button className="rounded-full bg-black px-6 py-4 font-black text-white">
-                  Create partner
+                  {t.createPartner}
                 </button>
               </form>
             </Panel>
@@ -1491,7 +1936,7 @@ export default async function AdminPage({
         </section>
 
         <section id="applications" className="mt-10 scroll-mt-28">
-          <SectionHeading title={t.applications} eyebrow="Partner requests" />
+          <SectionHeading title={t.applications} eyebrow={t.applicationsEyebrow} />
           <Panel>
             <div className="grid gap-4 lg:grid-cols-2">
               {applications.map((application) => {
@@ -1502,17 +1947,17 @@ export default async function AdminPage({
                   <div key={application.id} className="rounded-[1.6rem] bg-zinc-100 p-5">
                     <div className="flex flex-wrap items-center justify-between gap-3">
                       <h3 className="text-xl font-black">
-                        {application.business_name || "Application"}
+                        {application.business_name || t.application}
                       </h3>
-                      <Badge>{application.status || "pending"}</Badge>
+                      <Badge>{adminStatusLabel(t, application.status || "pending")}</Badge>
                     </div>
                     <div className="mt-4 grid gap-3 sm:grid-cols-2">
-                      <Info label="Contact" value={application.contact_name || application.name || "n/a"} />
-                      <Info label="Email" value={email || "n/a"} />
-                      <Info label="Phone" value={application.phone || "n/a"} />
-                      <Info label="Category" value={application.category || "n/a"} />
-                      <Info label="Address" value={application.address || "n/a"} />
-                      <Info label="Date" value={formatDate(application.created_at)} />
+                      <Info label={t.contact} value={application.contact_name || application.name || "n/a"} />
+                      <Info label={t.email} value={email || "n/a"} />
+                      <Info label={t.phone} value={application.phone || "n/a"} />
+                      <Info label={t.category} value={application.category || "n/a"} />
+                      <Info label={t.address} value={application.address || "n/a"} />
+                      <Info label={t.date} value={formatDate(application.created_at)} />
                     </div>
                     {message && (
                       <p className="mt-4 rounded-2xl bg-white p-4 text-sm leading-6 text-zinc-600">
@@ -1521,14 +1966,14 @@ export default async function AdminPage({
                     )}
                     <div className="mt-4 flex flex-wrap gap-2">
                       <form action={approveApplication}>
-                        <input type="hidden" name="application_id" value={application.id} />
+                        <input suppressHydrationWarning type="hidden" name="application_id" value={application.id} />
                         <button className="rounded-full bg-black px-4 py-3 text-sm font-black text-white">
                           {t.approve}
                         </button>
                       </form>
 
                       <form action={rejectApplication}>
-                        <input type="hidden" name="application_id" value={application.id} />
+                        <input suppressHydrationWarning type="hidden" name="application_id" value={application.id} />
                         <button className="rounded-full bg-white px-4 py-3 text-sm font-black text-black">
                           {t.reject}
                         </button>
@@ -1539,20 +1984,20 @@ export default async function AdminPage({
                           href={`mailto:${email}`}
                           className="rounded-full bg-white px-4 py-3 text-sm font-black text-black"
                         >
-                          Email partner
+                          {t.emailPartner}
                         </a>
                       )}
                     </div>
                   </div>
                 );
               })}
-              {applications.length === 0 && <EmptyState text="No applications yet." />}
+              {applications.length === 0 && <EmptyState text={t.noApplicationsYet} />}
             </div>
           </Panel>
         </section>
 
         <section id="settings" className="mt-10 scroll-mt-28">
-          <SectionHeading title={t.siteSettings} eyebrow="Website controls" />
+          <SectionHeading title={t.siteSettings} eyebrow={t.settingsEyebrow} />
           <Panel>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
               {siteSettingKeys.map((key) => {
@@ -1565,21 +2010,22 @@ export default async function AdminPage({
 
                 return (
                   <form key={key} action={updateSiteSetting} className="grid gap-2 rounded-2xl bg-zinc-100 p-4">
-                    <input type="hidden" name="key" value={key} />
+                    <input suppressHydrationWarning type="hidden" name="key" value={key} />
                     <label className="text-sm font-black text-zinc-500">{key}</label>
                     {booleanSetting ? (
-                      <select name="value" defaultValue={settingMap.get(key) || "false"} className="input">
-                        <option value="true">enabled</option>
-                        <option value="false">disabled</option>
+                      <select suppressHydrationWarning name="value" defaultValue={settingMap.get(key) || "false"} className="input">
+                        <option value="true">{t.enabled}</option>
+                        <option value="false">{t.disabled}</option>
                       </select>
                     ) : key === "hero_subtitle" || key === "membership_price_texts" || key === "announcement_banner" ? (
                       <textarea
+        suppressHydrationWarning
                         name="value"
                         defaultValue={settingMap.get(key) || ""}
                         className="input min-h-28"
                       />
                     ) : (
-                      <input name="value" defaultValue={settingMap.get(key) || ""} className="input" />
+                      <input suppressHydrationWarning name="value" defaultValue={settingMap.get(key) || ""} className="input" />
                     )}
                     <button className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
                       {t.save}
@@ -1673,12 +2119,18 @@ function Panel({
   );
 }
 
-function FilterForm({ children }: { children: ReactNode }) {
+function FilterForm({
+  children,
+  label,
+}: {
+  children: ReactNode;
+  label: string;
+}) {
   return (
     <form className="grid gap-3 lg:grid-cols-[1fr_220px_220px_auto]">
       {children}
       <button className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
-        Filter
+        {label}
       </button>
     </form>
   );
@@ -1706,24 +2158,29 @@ function Info({ label, value }: { label: string; value: string }) {
 function AnalyticsList({
   title,
   items,
+  emptyText,
 }: {
   title: string;
   items: { title: string; meta: string }[];
+  emptyText: string;
 }) {
   return (
     <div>
       <h3 className="mb-3 text-xl font-black">{title}</h3>
       <div className="grid gap-2">
         {items.length > 0 ? (
-          items.map((item) => (
-            <div key={`${item.title}-${item.meta}`} className="rounded-2xl bg-zinc-100 p-4">
+          items.map((item, index) => (
+            <div
+              key={`${title}-${item.title}-${item.meta}-${index}`}
+              className="rounded-2xl bg-zinc-100 p-4"
+            >
               <p className="font-black">{item.title}</p>
               <p className="mt-1 text-sm font-bold text-zinc-500">{item.meta}</p>
             </div>
           ))
         ) : (
           <p className="rounded-2xl bg-zinc-100 p-4 text-sm font-bold text-zinc-500">
-            No data yet.
+            {emptyText}
           </p>
         )}
       </div>

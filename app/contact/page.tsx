@@ -1,53 +1,14 @@
 import { cookies } from "next/headers";
-import { normalizeLang } from "../../lib/i18n";
+import { dictionary, normalizeLang } from "../../lib/i18n";
 import { getSiteSettings } from "../../lib/siteSettings";
 
 const defaultContactImage =
   "https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1600&q=90";
 
-const copy = {
-  en: {
-    eyebrow: "Contact",
-    title: "Talk to TLN Pass.",
-    subtitle:
-      "Questions about membership, billing or partnership? Choose the right direction below.",
-    support: "Member support",
-    billing: "Billing",
-    business: "Business",
-    partners: "Partnerships",
-    general: "General",
-    email: "Email us",
-  },
-  ru: {
-    eyebrow: "Контакты",
-    title: "Связаться с TLN Pass.",
-    subtitle:
-      "Вопросы по подписке, оплате или партнёрству? Выбери нужный раздел.",
-    support: "Поддержка участников",
-    billing: "Оплата",
-    business: "Бизнес",
-    partners: "Партнёрство",
-    general: "Общее",
-    email: "Написать",
-  },
-  ee: {
-    eyebrow: "Kontakt",
-    title: "Võta TLN Passiga ühendust.",
-    subtitle:
-      "Küsimused liikmesuse, maksete või partnerluse kohta? Vali sobiv teema.",
-    support: "Liikme tugi",
-    billing: "Maksed",
-    business: "Äri",
-    partners: "Partnerlus",
-    general: "Üldine",
-    email: "Kirjuta",
-  },
-};
-
 export default async function ContactPage() {
   const cookieStore = await cookies();
   const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
-  const t = copy[lang];
+  const t = dictionary[lang].contact;
   const settings = await getSiteSettings();
   const supportEmail = settings.supportEmail || "";
   const businessEmail = settings.businessEmail || supportEmail || "";
@@ -56,22 +17,22 @@ export default async function ContactPage() {
   const cards = [
     {
       title: t.support,
-      text: "Pass access, QR issues, device lock or account questions.",
+      text: t.cards.support,
       email: supportEmail,
     },
     {
       title: t.business,
-      text: "Restaurants, cafes, bars and venues that want to work with TLN Pass.",
+      text: t.cards.business,
       email: businessEmail,
     },
     {
       title: t.billing,
-      text: "Stripe checkout, subscription status, receipts or payment questions.",
+      text: t.cards.billing,
       email: supportEmail,
     },
     {
       title: t.general,
-      text: "General questions about TLN Pass, media or city partnerships.",
+      text: t.cards.general,
       email: supportEmail,
     },
   ];
@@ -106,14 +67,13 @@ export default async function ContactPage() {
 
             <div className="flex flex-col justify-center p-8 md:p-12">
               <p className="text-sm font-black uppercase tracking-[0.25em] text-white/45">
-                TLN Pass concierge
+                {t.conciergeLabel}
               </p>
               <h2 className="mt-4 max-w-xl text-4xl font-black leading-tight tracking-tight md:text-6xl">
-                Fast help for members and partners.
+                {t.conciergeTitle}
               </h2>
               <p className="mt-5 max-w-xl text-lg leading-8 text-white/65">
-                Choose the right mailbox below so the message lands with the
-                right person from the start.
+                {t.conciergeText}
               </p>
             </div>
           </div>

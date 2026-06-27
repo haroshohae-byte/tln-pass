@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import Link from "next/link";
 import { hashDeviceToken } from "../../../lib/device";
+import { dictionary, launchCopy, normalizeLang, type Lang } from "../../../lib/i18n";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import DynamicQr from "./DynamicQr";
 
@@ -15,12 +16,44 @@ type MemberPass = {
   device_hash: string | null;
 };
 
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en-GB", {
+type PlanCopyItems = Record<
+  "14day" | "monthly" | "6months" | "yearly",
+  { name: string }
+>;
+
+function formatDate(date: string, lang: Lang) {
+  const locale = lang === "ru" ? "ru-RU" : lang === "ee" ? "et-EE" : "en-GB";
+
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",
   }).format(new Date(date));
+}
+
+function formatPlanName(
+  plan: string,
+  plansCopy: PlanCopyItems
+) {
+  const value = plan.toLowerCase();
+
+  if (value.includes("14") || value.includes("starter")) {
+    return plansCopy["14day"].name;
+  }
+
+  if (value.includes("6") || value.includes("half")) {
+    return plansCopy["6months"].name;
+  }
+
+  if (value.includes("year") || value.includes("golden")) {
+    return plansCopy.yearly.name;
+  }
+
+  if (value.includes("month") || value.includes("monthly")) {
+    return plansCopy.monthly.name;
+  }
+
+  return plan;
 }
 
 export default async function AccountPage({
@@ -32,6 +65,10 @@ export default async function AccountPage({
 }) {
   const { code } = await params;
   const { locked } = await searchParams;
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = launchCopy[lang].account;
+  const planCopy = dictionary[lang].plans.items;
 
   const { data } = await supabaseAdmin
     .from("member_passes")
@@ -44,14 +81,14 @@ export default async function AccountPage({
       <main className="min-h-screen bg-black px-6 py-24 text-white">
         <section className="mx-auto max-w-3xl text-center">
           <h1 className="text-6xl font-black md:text-8xl">
-            Account not found.
+            {t.notFoundTitle}
           </h1>
 
           <Link
             href="/join"
             className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black"
           >
-            Join now
+            {t.joinNow}
           </Link>
         </section>
       </main>
@@ -60,7 +97,6 @@ export default async function AccountPage({
 
   const pass = data as MemberPass;
 
-  const cookieStore = await cookies();
   const deviceToken = cookieStore.get("tln_device")?.value;
   const currentDeviceHash = deviceToken ? hashDeviceToken(deviceToken) : null;
 
@@ -78,52 +114,53 @@ export default async function AccountPage({
       <section className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-            Member account
+            {t.eyebrow}
           </p>
 
           <h1 className="mt-4 text-6xl font-black tracking-tight md:text-8xl">
-            Your TLN Pass.
+            {t.title}
           </h1>
 
           <p className="mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
-            This account is protected by a device lock and a dynamic QR code.
-            Show the QR before payment at partner places.
+            {t.text}
           </p>
 
           <div className="mt-10 grid gap-4 sm:grid-cols-2">
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <p className="text-sm font-black uppercase tracking-[0.2em] text-zinc-600">
-                Member
+                {t.member}
               </p>
               <p className="mt-3 text-2xl font-black">{pass.full_name}</p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <p className="text-sm font-black uppercase tracking-[0.2em] text-zinc-600">
-                Status
+                {t.status}
               </p>
               <p
                 className={`mt-3 text-2xl font-black ${
                   isActive ? "text-emerald-300" : "text-red-300"
                 }`}
               >
-                {isActive ? "ACTIVE" : "NOT ACTIVE"}
+                {isActive ? t.active : t.inactive}
               </p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
               <p className="text-sm font-black uppercase tracking-[0.2em] text-zinc-600">
-                Plan
-              </p>
-              <p className="mt-3 text-2xl font-black">{pass.plan}</p>
-            </div>
-
-            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
-              <p className="text-sm font-black uppercase tracking-[0.2em] text-zinc-600">
-                Valid until
+                {t.plan}
               </p>
               <p className="mt-3 text-2xl font-black">
-                {formatDate(pass.valid_until)}
+                {formatPlanName(pass.plan, planCopy)}
+              </p>
+            </div>
+
+            <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6">
+              <p className="text-sm font-black uppercase tracking-[0.2em] text-zinc-600">
+                {t.validUntil}
+              </p>
+              <p className="mt-3 text-2xl font-black">
+                {formatDate(pass.valid_until, lang)}
               </p>
             </div>
           </div>
@@ -133,14 +170,14 @@ export default async function AccountPage({
               href="/partners"
               className="rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
             >
-              Explore partners
+              {t.explore}
             </Link>
 
             <Link
               href={`/account/start/${pass.pass_code}`}
               className="rounded-full border border-white/10 px-8 py-4 font-black text-white hover:bg-white hover:text-black"
             >
-              Open on this device
+              {t.openDevice}
             </Link>
           </div>
         </div>
@@ -148,28 +185,26 @@ export default async function AccountPage({
         <div>
           {isLocked ? (
             <div className="rounded-[3rem] border border-amber-400/20 bg-amber-400/10 p-8 text-amber-200">
-              <h2 className="text-4xl font-black">Device locked.</h2>
+              <h2 className="text-4xl font-black">{t.lockedTitle}</h2>
 
               <p className="mt-5 leading-8">
-                This TLN Pass is protected against sharing. Open the pass using
-                the original device, or press “Open on this device” if this is
-                the first setup.
+                {t.lockedText}
               </p>
 
               <Link
                 href={`/account/start/${pass.pass_code}`}
                 className="mt-8 inline-flex rounded-full bg-amber-300 px-8 py-4 font-black text-black"
               >
-                Open on this device
+                {t.openDevice}
               </Link>
             </div>
           ) : isActive ? (
-            <DynamicQr passCode={pass.pass_code} />
+            <DynamicQr passCode={pass.pass_code} copy={t.qr} />
           ) : (
             <div className="rounded-[3rem] border border-red-400/20 bg-red-400/10 p-8 text-red-300">
-              <h2 className="text-4xl font-black">Pass not active.</h2>
+              <h2 className="text-4xl font-black">{t.inactiveTitle}</h2>
               <p className="mt-5 leading-8">
-                This membership is expired or inactive.
+                {t.inactiveText}
               </p>
             </div>
           )}

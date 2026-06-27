@@ -6,13 +6,24 @@ export default function ImagePreviewInput({
   name,
   label,
   currentUrl,
+  copy,
 }: {
   name: string;
   label: string;
   currentUrl?: string | null;
+  copy?: {
+    preview: string;
+    invalidType: string;
+    tooLarge: string;
+  };
 }) {
   const [previewUrl, setPreviewUrl] = useState<string | null>(currentUrl || null);
   const [error, setError] = useState("");
+  const text = copy || {
+    preview: "Image preview",
+    invalidType: "Use JPG, PNG or WebP.",
+    tooLarge: "Image must be under 4 MB.",
+  };
 
   function onFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -27,14 +38,14 @@ export default function ImagePreviewInput({
 
     if (!allowedTypes.includes(file.type)) {
       event.target.value = "";
-      setError("Use JPG, PNG or WebP.");
+      setError(text.invalidType);
       setPreviewUrl(currentUrl || null);
       return;
     }
 
     if (file.size > 4 * 1024 * 1024) {
       event.target.value = "";
-      setError("Image must be under 4 MB.");
+      setError(text.tooLarge);
       setPreviewUrl(currentUrl || null);
       return;
     }
@@ -53,12 +64,13 @@ export default function ImagePreviewInput({
           <img src={previewUrl} alt="" className="h-44 w-full object-cover" />
         ) : (
           <div className="grid h-44 place-items-center bg-[linear-gradient(135deg,#27272a,#09090b)] text-sm font-black uppercase tracking-[0.22em] text-zinc-500">
-            Image preview
+            {text.preview}
           </div>
         )}
       </div>
 
       <input
+        suppressHydrationWarning
         name={name}
         type="file"
         accept="image/jpeg,image/png,image/webp"

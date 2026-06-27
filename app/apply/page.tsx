@@ -1,4 +1,6 @@
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { launchCopy, normalizeLang } from "../../lib/i18n";
 import { getSiteSettings } from "../../lib/siteSettings";
 import { supabase } from "../../lib/supabase";
 
@@ -48,6 +50,9 @@ async function submitPartnerApplication(formData: FormData) {
 }
 
 export default async function ApplyPage() {
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = launchCopy[lang].apply;
   const settings = await getSiteSettings();
   const applicationsClosed = settings.partnerApplicationsEnabled === "false";
 
@@ -56,28 +61,22 @@ export default async function ApplyPage() {
       <section className="mx-auto grid max-w-7xl gap-16 lg:grid-cols-2">
         <div>
           <p className="text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-            Partner application
+            {t.eyebrow}
           </p>
 
           <h1 className="mt-4 max-w-4xl text-6xl font-black tracking-tight md:text-8xl">
-            Apply to join TLN Pass.
+            {t.title}
           </h1>
 
           <p className="mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
-            Restaurants, cafes, entertainment venues and local businesses can
-            apply to become part of the TLN Pass partner network.
+            {t.subtitle}
           </p>
 
           <div className="mt-12 rounded-[3rem] border border-white/10 bg-white/[0.04] p-8">
-            <h2 className="text-3xl font-black">How approval works</h2>
+            <h2 className="text-3xl font-black">{t.howTitle}</h2>
 
             <div className="mt-8 space-y-5">
-              {[
-                "Business sends application",
-                "TLN Pass reviews the place and offer",
-                "Admin approves or rejects the application",
-                "Approved partner receives a private edit link",
-              ].map((item, index) => (
+              {t.steps.map((item, index) => (
                 <div key={item} className="flex gap-4">
                   <p className="font-black text-zinc-600">0{index + 1}</p>
                   <p className="text-zinc-300">{item}</p>
@@ -88,86 +87,96 @@ export default async function ApplyPage() {
         </div>
 
         <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-8 backdrop-blur-xl">
-          <h2 className="text-4xl font-black">Business details</h2>
+          <h2 className="text-4xl font-black">{t.formTitle}</h2>
           <p className="mt-4 text-zinc-400">
-            Send your business details for review.
+            {t.formText}
           </p>
 
           {applicationsClosed ? (
             <div className="mt-8 rounded-[2rem] border border-white/10 bg-black p-8 text-zinc-300">
-              Partner applications are currently closed.
+              {t.closed}
             </div>
           ) : (
           <form action={submitPartnerApplication} className="mt-8 space-y-5">
             <input
+        suppressHydrationWarning
               name="business_name"
               type="text"
               required
-              placeholder="Business name"
+              placeholder={t.placeholders.businessName}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+        suppressHydrationWarning
               name="category"
               type="text"
               required
-              placeholder="Category: Restaurant, Cafe, Beauty..."
+              placeholder={t.placeholders.category}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+        suppressHydrationWarning
               name="address"
               type="text"
-              placeholder="Address in Tallinn"
+              placeholder={t.placeholders.address}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+        suppressHydrationWarning
               name="phone"
               type="text"
-              placeholder="Phone"
+              placeholder={t.placeholders.phone}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+        suppressHydrationWarning
               name="website"
               type="text"
-              placeholder="Website"
+              placeholder={t.placeholders.website}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+        suppressHydrationWarning
               name="instagram"
               type="text"
-              placeholder="Instagram"
+              placeholder={t.placeholders.instagram}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+        suppressHydrationWarning
               name="opening_hours"
               type="text"
-              placeholder="Opening hours: Mon-Fri 12:00-22:00"
+              placeholder={t.placeholders.openingHours}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+        suppressHydrationWarning
               name="offer"
               type="text"
-              placeholder="Offer example: -20% on weekdays"
+              placeholder={t.placeholders.offer}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <input
+        suppressHydrationWarning
               name="contact_email"
               type="email"
               required
-              placeholder="Contact email"
+              placeholder={t.placeholders.contactEmail}
               className="w-full rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
 
             <textarea
+        suppressHydrationWarning
               name="description"
-              placeholder="Short description of your business"
+              placeholder={t.placeholders.description}
               rows={6}
               className="w-full resize-none rounded-2xl border border-white/10 bg-black px-5 py-4 text-white outline-none placeholder:text-zinc-600 focus:border-white/30"
             />
@@ -176,7 +185,7 @@ export default async function ApplyPage() {
               type="submit"
               className="w-full rounded-full bg-white px-8 py-5 font-black text-black transition hover:scale-[1.02] hover:bg-zinc-200"
             >
-              Send application
+              {t.submit}
             </button>
           </form>
           )}

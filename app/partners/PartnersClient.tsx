@@ -1,74 +1,11 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { Lang } from "../../lib/i18n";
+import { dictionary, type Lang } from "../../lib/i18n";
 import type { PartnerCard } from "./page";
 
 const heroImage =
   "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=90";
-
-const text = {
-  en: {
-    badge: "TLN Pass partners",
-    title: "A city guide for member benefits.",
-    subtitle:
-      "Search selected restaurants, cafes, bars and experiences in Tallinn.",
-    search: "Search by name, offer, address...",
-    all: "All",
-    restaurants: "Restaurants",
-    cafes: "Cafes",
-    bars: "Bars",
-    entertainment: "Entertainment",
-    fitness: "Fitness",
-    beauty: "Beauty",
-    events: "Events",
-    found: "partners found",
-    open: "Open",
-    noResults: "No partners found.",
-    emptyText: "Try another search or category. New Tallinn partners are added regularly.",
-    join: "Join Now",
-  },
-  ru: {
-    badge: "Партнёры TLN Pass",
-    title: "City guide для привилегий.",
-    subtitle:
-      "Ищи рестораны, кафе, бары и места в Таллине с benefits для участников.",
-    search: "Поиск по названию, офферу, адресу...",
-    all: "Все",
-    restaurants: "Рестораны",
-    cafes: "Кафе",
-    bars: "Бары",
-    entertainment: "Развлечения",
-    fitness: "Фитнес",
-    beauty: "Beauty",
-    events: "События",
-    found: "партнёров найдено",
-    open: "Открыть",
-    noResults: "Партнёры не найдены.",
-    emptyText: "Попробуй другой поиск или категорию. Новые партнёры Tallinn добавляются регулярно.",
-    join: "Купить",
-  },
-  ee: {
-    badge: "TLN Pass partnerid",
-    title: "City guide liikme eeliste jaoks.",
-    subtitle:
-      "Otsi valitud restorane, kohvikuid, baare ja elamusi Tallinnas.",
-    search: "Otsi nime, pakkumise või aadressi järgi...",
-    all: "Kõik",
-    restaurants: "Restoranid",
-    cafes: "Kohvikud",
-    bars: "Baarid",
-    entertainment: "Meelelahutus",
-    fitness: "Fitness",
-    beauty: "Ilu",
-    events: "Üritused",
-    found: "partnerit leitud",
-    open: "Ava",
-    noResults: "Partnereid ei leitud.",
-    emptyText: "Proovi teist otsingut või kategooriat. Uusi Tallinna partnereid lisandub regulaarselt.",
-    join: "Liitu",
-  },
-};
 
 const categoryList = [
   { id: "all", key: "all" },
@@ -134,7 +71,8 @@ export default function PartnersClient({
   initialCategory: string;
   initialSearch: string;
 }) {
-  const t = text[currentLang];
+  const t = dictionary[currentLang];
+  const page = t.partners;
   const safeInitialCategory = categoryList.some(
     (category) => category.id === initialCategory
   )
@@ -193,15 +131,15 @@ export default function PartnersClient({
           <div className="grid min-h-[360px] lg:grid-cols-[1fr_0.85fr]">
             <div className="flex flex-col justify-center p-8 md:p-12">
               <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/45">
-                {t.badge}
+                {page.badge}
               </p>
 
               <h1 className="mt-5 max-w-3xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
-                {t.title}
+                {page.title}
               </h1>
 
               <p className="mt-6 max-w-2xl text-xl leading-8 text-white/68">
-                {t.subtitle}
+                {page.subtitle}
               </p>
             </div>
 
@@ -218,9 +156,10 @@ export default function PartnersClient({
 
         <div className="sticky top-20 z-30 mt-8 rounded-[2rem] bg-white p-3 shadow-sm ring-1 ring-black/5">
           <input
+            suppressHydrationWarning
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder={t.search}
+            placeholder={page.search}
             className="mb-3 w-full rounded-[1.4rem] border border-black/10 bg-zinc-100 px-5 py-4 font-bold text-black outline-none placeholder:text-zinc-400 focus:border-black/25"
           />
 
@@ -236,14 +175,14 @@ export default function PartnersClient({
                     : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200"
                 }`}
               >
-                {t[category.key]}
+                {t.categories[category.key]}
               </button>
             ))}
           </div>
         </div>
 
         <p className="mt-8 text-sm font-bold uppercase tracking-[0.2em] text-zinc-500">
-          {filteredPartners.length} {t.found}
+          {filteredPartners.length} {page.found}
         </p>
 
         {filteredPartners.length > 0 ? (
@@ -299,7 +238,7 @@ export default function PartnersClient({
                         TLN Pass
                       </span>
                       <span className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
-                        {t.open}
+                        {page.open}
                       </span>
                     </div>
                   </div>
@@ -309,9 +248,9 @@ export default function PartnersClient({
           </div>
         ) : (
           <div className="mt-8 rounded-[2.4rem] bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
-            <h2 className="text-4xl font-black">{t.noResults}</h2>
+            <h2 className="text-4xl font-black">{page.noResults}</h2>
             <p className="mx-auto mt-4 max-w-xl leading-7 text-zinc-600">
-              {t.emptyText}
+              {page.emptyText}
             </p>
           </div>
         )}

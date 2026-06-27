@@ -1,4 +1,5 @@
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { launchCopy, normalizeLang } from "../../../lib/i18n";
 import { stripe } from "../../../lib/stripe";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 
@@ -44,6 +45,9 @@ export default async function CheckoutSuccessPage({
   searchParams: Promise<{ session_id?: string }>;
 }) {
   const { session_id } = await searchParams;
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = launchCopy[lang].checkout;
   const baseUrl = await getSafeBaseUrl();
 
   if (!session_id) {
@@ -51,18 +55,18 @@ export default async function CheckoutSuccessPage({
       <main className="min-h-screen bg-black px-6 py-24 text-white">
         <section className="mx-auto max-w-3xl text-center">
           <h1 className="text-6xl font-black md:text-8xl">
-            Missing session.
+            {t.missingTitle}
           </h1>
 
           <p className="mt-6 text-xl leading-8 text-zinc-400">
-            We could not find your Stripe Checkout session.
+            {t.missingText}
           </p>
 
           <a
             href="/join"
             className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
           >
-            Back to join
+            {t.backToJoin}
           </a>
         </section>
       </main>
@@ -80,18 +84,18 @@ export default async function CheckoutSuccessPage({
           </div>
 
           <h1 className="mt-8 text-6xl font-black md:text-8xl">
-            Payment not completed.
+            {t.unpaidTitle}
           </h1>
 
           <p className="mt-6 text-xl leading-8 text-zinc-400">
-            Stripe did not confirm this payment as paid.
+            {t.unpaidText}
           </p>
 
           <a
             href="/join"
             className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
           >
-            Try again
+            {t.tryAgain}
           </a>
         </section>
       </main>
@@ -179,30 +183,26 @@ export default async function CheckoutSuccessPage({
         </div>
 
         <p className="mt-10 text-sm font-bold uppercase tracking-[0.3em] text-zinc-500">
-          Membership active
+          {t.activeLabel}
         </p>
 
         <h1 className="mt-4 text-6xl font-black md:text-8xl">
-          Welcome to TLN Pass.
+          {t.title}
         </h1>
 
         <p className="mx-auto mt-8 max-w-2xl text-xl leading-8 text-zinc-400">
-          Your account is ready. Open your secure member account on this
-          device. The dynamic QR will be locked to the first device that opens
-          it.
+          {t.text}
         </p>
 
         <div className="mx-auto mt-10 max-w-2xl rounded-[3rem] border border-white/10 bg-white/[0.04] p-8 text-left">
           <p className="text-sm font-black uppercase tracking-[0.25em] text-zinc-600">
-            Next step
+            {t.nextStep}
           </p>
 
-          <h2 className="mt-4 text-3xl font-black">Activate your device</h2>
+          <h2 className="mt-4 text-3xl font-black">{t.activateTitle}</h2>
 
           <p className="mt-4 leading-7 text-zinc-400">
-            For screenshot protection, your TLN Pass will be connected to this
-            device. After that, your dynamic QR will refresh automatically and
-            old QR screenshots will expire.
+            {t.activateText}
           </p>
         </div>
 
@@ -210,7 +210,7 @@ export default async function CheckoutSuccessPage({
           href={accountStartUrl}
           className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
         >
-          Open my TLN Pass
+          {t.openPass}
         </a>
       </section>
     </main>

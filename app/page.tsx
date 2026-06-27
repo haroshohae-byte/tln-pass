@@ -30,54 +30,38 @@ const heroBackground = [
 
 const categories = [
   {
-    label: "Restaurants",
+    key: "restaurants",
     href: "/partners?category=restaurants",
     img: images.restaurant,
   },
   {
-    label: "Cafes",
+    key: "cafes",
     href: "/partners?category=cafes",
     img: images.cafe,
   },
   {
-    label: "Bars",
+    key: "bars",
     href: "/partners?category=bars",
     img: images.bar,
   },
   {
-    label: "Entertainment",
+    key: "entertainment",
     href: "/partners?category=entertainment",
     img: images.event,
   },
   {
-    label: "Fitness",
+    key: "fitness",
     href: "/partners?category=fitness",
     img: images.fitness,
   },
   {
-    label: "Beauty",
+    key: "beauty",
     href: "/partners?category=beauty",
     img: images.beauty,
   },
-];
+] as const;
 
-const steps = [
-  {
-    title: "Choose the place.",
-    text: "Open restaurants, cafes, bars and experiences curated for TLN Pass members.",
-    img: images.cafe,
-  },
-  {
-    title: "Show your pass.",
-    text: "The dynamic QR is made for the moment before you pay.",
-    img: images.dinner,
-  },
-  {
-    title: "Unlock the benefit.",
-    text: "The partner verifies your active membership and applies the available perk.",
-    img: images.restaurant,
-  },
-];
+const stepImages = [images.cafe, images.dinner, images.restaurant];
 
 export default async function HomePage() {
   const cookieStore = await cookies();
@@ -108,11 +92,11 @@ export default async function HomePage() {
           </p>
 
           <h1 className="fade-up fade-up-delay-1 mt-8 max-w-5xl text-6xl font-black leading-[0.98] tracking-tight md:text-8xl lg:text-9xl">
-            {settings.heroTitle || t.title}
+            {lang === "en" && settings.heroTitle ? settings.heroTitle : t.title}
           </h1>
 
           <p className="fade-up fade-up-delay-2 mt-8 max-w-3xl text-xl font-medium leading-8 text-white/80 md:text-2xl">
-            {settings.heroSubtitle || t.text}
+            {lang === "en" && settings.heroSubtitle ? settings.heroSubtitle : t.text}
           </p>
 
           <div className="fade-up fade-up-delay-3 mt-10 flex flex-col gap-4 sm:flex-row">
@@ -137,27 +121,26 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl">
           <div className="mx-auto max-w-4xl text-center">
             <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-              Simple by design
+              {t.simpleLabel}
             </p>
 
             <h2 className="mt-5 text-5xl font-black leading-tight tracking-tight md:text-7xl">
-              A city guide that works like a pass.
+              {t.simpleTitle}
             </h2>
 
             <p className="mx-auto mt-6 max-w-2xl text-xl leading-8 text-zinc-600">
-              No messy coupons. No plastic card. Open your phone, choose a place,
-              show the QR and enjoy the member benefit.
+              {t.simpleText}
             </p>
           </div>
 
           <div className="mt-14 grid gap-6 lg:grid-cols-3">
-            {steps.map((step) => (
+            {t.steps.map((step, index) => (
               <article
                 key={step.title}
                 className="fade-up premium-card hover-lift overflow-hidden"
               >
                 <img
-                  src={step.img}
+                  src={stepImages[index]}
                   alt={step.title}
                   className="h-72 w-full object-cover"
                 />
@@ -182,17 +165,16 @@ export default async function HomePage() {
           <div className="mb-10 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
             <div>
               <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-                Choose your vibe
+                {t.categoriesLabel}
               </p>
 
               <h2 className="mt-4 text-5xl font-black tracking-tight md:text-7xl">
-                Pick your mood.
+                {t.categoriesTitle}
               </h2>
             </div>
 
             <p className="max-w-xl text-lg leading-8 text-zinc-600">
-              Jump straight into what you want today: food, coffee, cocktails,
-              events, fitness or beauty.
+              {t.categoriesText}
             </p>
           </div>
 
@@ -205,7 +187,7 @@ export default async function HomePage() {
               >
                 <img
                   src={category.img}
-                  alt={category.label}
+                  alt={dictionary[lang].categories[category.key]}
                   className="absolute inset-0 h-full w-full object-cover opacity-90 transition duration-700 group-hover:scale-110"
                 />
 
@@ -213,11 +195,11 @@ export default async function HomePage() {
 
                 <div className="absolute bottom-6 left-6 right-6 flex items-end justify-between gap-4 text-white">
                   <h3 className="text-4xl font-black tracking-tight">
-                    {category.label}
+                    {dictionary[lang].categories[category.key]}
                   </h3>
 
                   <span className="rounded-full bg-white px-5 py-3 text-sm font-black text-black">
-                    Open
+                    {dictionary[lang].common.open}
                   </span>
                 </div>
               </Link>
@@ -231,30 +213,29 @@ export default async function HomePage() {
           <div className="grid min-h-[560px] lg:grid-cols-2">
             <div className="flex flex-col justify-center p-8 md:p-14">
               <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/45">
-                Mobile-first
+                {t.mobileLabel}
               </p>
 
               <h2 className="mt-5 max-w-xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
-                Built for the moment before you pay.
+                {t.mobileTitle}
               </h2>
 
               <p className="mt-6 max-w-xl text-xl leading-8 text-white/65">
-                TLN Pass is made to be used on the phone, at the venue, when it
-                actually matters.
+                {t.mobileText}
               </p>
 
               <Link
                 href="/membership"
                 className="mt-9 w-fit rounded-full bg-white px-8 py-4 font-bold text-black transition hover:scale-105"
               >
-                View membership
+                {t.mobileCta}
               </Link>
             </div>
 
             <div className="relative min-h-[420px]">
               <img
                 src={images.bar}
-                alt="Tallinn night out"
+                alt={t.nightOutAlt}
                 className="absolute inset-0 h-full w-full object-cover"
               />
 
