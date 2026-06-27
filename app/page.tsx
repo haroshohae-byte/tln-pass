@@ -1,5 +1,7 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { dictionary, normalizeLang } from "../lib/i18n";
+import { getSiteSettings } from "../lib/siteSettings";
 
 const images = {
   tallinn:
@@ -19,6 +21,12 @@ const images = {
   dinner:
     "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1400&q=90",
 };
+
+const heroBackground = [
+  "radial-gradient(circle at 18% 22%, rgba(255,255,255,0.20), transparent 24%)",
+  "radial-gradient(circle at 78% 12%, rgba(120,170,255,0.22), transparent 26%)",
+  "linear-gradient(135deg, rgba(5,5,5,0.42), rgba(5,5,5,0.85))",
+];
 
 const categories = [
   {
@@ -75,45 +83,52 @@ export default async function HomePage() {
   const cookieStore = await cookies();
   const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
   const t = dictionary[lang].home;
+  const settings = await getSiteSettings();
+  const heroImageLayers = [
+    ...heroBackground,
+    settings.homepageHeroImage ? `url('${settings.homepageHeroImage}')` : "",
+    "url('/images/home/hero.jpg')",
+    `url('${images.tallinn}')`,
+    "linear-gradient(135deg, #111827, #050505 62%, #1d1d1f)",
+  ]
+    .filter(Boolean)
+    .join(", ");
 
   return (
     <main className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f]">
-      <section className="relative min-h-[92vh] overflow-hidden bg-black text-white">
-        <img
-          src={images.tallinn}
-          alt="Tallinn"
-          className="absolute inset-0 h-full w-full object-cover opacity-75"
-        />
-
-        <div className="absolute inset-0 bg-gradient-to-b from-black/25 via-black/25 to-black/85" />
+      <section
+        className="relative min-h-[92vh] overflow-hidden bg-[#111827] bg-cover bg-center text-white"
+        style={{ backgroundImage: heroImageLayers }}
+      >
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_22%,rgba(255,255,255,0.10),transparent_24%),linear-gradient(to_bottom,rgba(0,0,0,0.32),rgba(0,0,0,0.30),rgba(0,0,0,0.88))]" />
 
         <div className="relative mx-auto flex min-h-[92vh] max-w-7xl flex-col items-center justify-center px-5 py-20 text-center">
-          <p className="rounded-full bg-white/10 px-5 py-2 text-sm font-bold backdrop-blur-2xl">
+          <p className="fade-up rounded-full bg-white/10 px-5 py-2 text-sm font-bold backdrop-blur-2xl">
             {t.badge}
           </p>
 
-          <h1 className="mt-8 max-w-5xl text-6xl font-black leading-[0.98] tracking-tight md:text-8xl lg:text-9xl">
-            Tallinn, unlocked.
+          <h1 className="fade-up fade-up-delay-1 mt-8 max-w-5xl text-6xl font-black leading-[0.98] tracking-tight md:text-8xl lg:text-9xl">
+            {settings.heroTitle || t.title}
           </h1>
 
-          <p className="mt-8 max-w-3xl text-xl font-medium leading-8 text-white/80 md:text-2xl">
-            {t.text}
+          <p className="fade-up fade-up-delay-2 mt-8 max-w-3xl text-xl font-medium leading-8 text-white/80 md:text-2xl">
+            {settings.heroSubtitle || t.text}
           </p>
 
-          <div className="mt-10 flex flex-col gap-4 sm:flex-row">
-            <a
+          <div className="fade-up fade-up-delay-3 mt-10 flex flex-col gap-4 sm:flex-row">
+            <Link
               href="/membership"
-              className="rounded-full bg-white px-8 py-4 text-base font-bold text-black transition hover:scale-105"
+              className="premium-button bg-white px-8 py-4 text-base font-bold text-black hover:shadow-[0_18px_45px_rgba(255,255,255,0.18)]"
             >
               {t.ctaPrimary}
-            </a>
+            </Link>
 
-            <a
+            <Link
               href="/partners"
-              className="rounded-full bg-white/12 px-8 py-4 text-base font-bold text-white ring-1 ring-white/20 backdrop-blur-2xl transition hover:bg-white hover:text-black"
+              className="premium-button bg-white/12 px-8 py-4 text-base font-bold text-white ring-1 ring-white/20 backdrop-blur-2xl hover:bg-white hover:text-black"
             >
               {t.ctaSecondary}
-            </a>
+            </Link>
           </div>
         </div>
       </section>
@@ -139,7 +154,7 @@ export default async function HomePage() {
             {steps.map((step) => (
               <article
                 key={step.title}
-                className="overflow-hidden rounded-[2.2rem] bg-white shadow-sm ring-1 ring-black/5"
+                className="fade-up premium-card hover-lift overflow-hidden"
               >
                 <img
                   src={step.img}
@@ -183,10 +198,10 @@ export default async function HomePage() {
 
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {categories.map((category) => (
-              <a
+              <Link
                 key={category.href}
                 href={category.href}
-                className="group relative h-[360px] overflow-hidden rounded-[2.2rem] bg-black"
+                className="fade-up hover-lift group relative h-[360px] overflow-hidden rounded-[2.2rem] bg-black"
               >
                 <img
                   src={category.img}
@@ -205,7 +220,7 @@ export default async function HomePage() {
                     Open
                   </span>
                 </div>
-              </a>
+              </Link>
             ))}
           </div>
         </div>
@@ -228,12 +243,12 @@ export default async function HomePage() {
                 actually matters.
               </p>
 
-              <a
+              <Link
                 href="/membership"
                 className="mt-9 w-fit rounded-full bg-white px-8 py-4 font-bold text-black transition hover:scale-105"
               >
                 View membership
-              </a>
+              </Link>
             </div>
 
             <div className="relative min-h-[420px]">

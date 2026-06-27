@@ -1,17 +1,22 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { dictionary, normalizeLang } from "../../lib/i18n";
+import { getSiteSettings } from "../../lib/siteSettings";
 import LanguageSwitcher from "./LanguageSwitcher";
 
 export default async function Footer() {
   const cookieStore = await cookies();
   const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
   const t = dictionary[lang];
+  const settings = await getSiteSettings();
+  const instagramUrl = settings.instagramUrl;
 
   return (
     <footer className="border-t border-white/10 bg-black px-6 py-12 text-white">
       <div className="mx-auto grid max-w-7xl gap-10 md:grid-cols-[1.5fr_1fr_1fr_1fr]">
         <div>
-          <a href="/" className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 transition hover:opacity-80">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-white text-lg font-black text-black">
               TLN
             </div>
@@ -22,7 +27,7 @@ export default async function Footer() {
                 Tallinn membership
               </p>
             </div>
-          </a>
+          </Link>
 
           <p className="mt-6 max-w-sm leading-7 text-zinc-500">
             {t.footer.tagline}
@@ -33,58 +38,67 @@ export default async function Footer() {
           </div>
         </div>
 
-        <div>
-          <p className="font-black">{t.footer.explore}</p>
+        <FooterGroup title={t.footer.explore}>
+          <FooterLink href="/partners">{t.nav.partners}</FooterLink>
+          <FooterLink href="/membership">{t.nav.membership}</FooterLink>
+          <FooterLink href="/my-pass">{t.nav.myPass}</FooterLink>
+        </FooterGroup>
 
-          <div className="mt-5 grid gap-3 text-sm text-zinc-500">
-            <a href="/partners" className="hover:text-white">
-              {t.nav.partners}
-            </a>
-            <a href="/membership" className="hover:text-white">
-              {t.nav.membership}
-            </a>
-            <a href="/my-pass" className="hover:text-white">
-              {t.nav.myPass}
-            </a>
-          </div>
-        </div>
-
-        <div>
-          <p className="font-black">{t.footer.company}</p>
-
-          <div className="mt-5 grid gap-3 text-sm text-zinc-500">
-            <a href="/business" className="hover:text-white">
-              {t.nav.business}
-            </a>
-            <a href="/contact" className="hover:text-white">
-              {t.nav.contact}
-            </a>
-            <a href="https://instagram.com" className="hover:text-white">
+        <FooterGroup title={t.footer.company}>
+          <FooterLink href="/business">{t.nav.business}</FooterLink>
+          <FooterLink href="/contact">{t.nav.contact}</FooterLink>
+          <FooterLink href="/faq">FAQ</FooterLink>
+          {instagramUrl && (
+            <a href={instagramUrl} className="hover:text-white">
               Instagram
             </a>
-          </div>
-        </div>
+          )}
+          {settings.supportEmail && (
+            <a href={`mailto:${settings.supportEmail}`} className="hover:text-white">
+              {settings.supportEmail}
+            </a>
+          )}
+        </FooterGroup>
 
-        <div>
-          <p className="font-black">{t.footer.legal}</p>
-
-          <div className="mt-5 grid gap-3 text-sm text-zinc-500">
-            <a href="/terms" className="hover:text-white">
-              {t.footer.terms}
-            </a>
-            <a href="/privacy" className="hover:text-white">
-              {t.footer.privacy}
-            </a>
-            <a href="/refund-policy" className="hover:text-white">
-              {t.footer.refund}
-            </a>
-          </div>
-        </div>
+        <FooterGroup title={t.footer.legal}>
+          <FooterLink href="/terms">{t.footer.terms}</FooterLink>
+          <FooterLink href="/privacy">{t.footer.privacy}</FooterLink>
+          <FooterLink href="/refund-policy">{t.footer.refund}</FooterLink>
+        </FooterGroup>
       </div>
 
       <div className="mx-auto mt-10 max-w-7xl border-t border-white/10 pt-6 text-sm text-zinc-700">
-        © {new Date().getFullYear()} TLN Pass. {t.footer.rights}
+        &copy; {new Date().getFullYear()} TLN Pass. {t.footer.rights}
       </div>
     </footer>
+  );
+}
+
+function FooterGroup({
+  title,
+  children,
+}: {
+  title: string;
+  children: ReactNode;
+}) {
+  return (
+    <div>
+      <p className="font-black">{title}</p>
+      <div className="mt-5 grid gap-3 text-sm text-zinc-500">{children}</div>
+    </div>
+  );
+}
+
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <Link href={href} className="hover:text-white">
+      {children}
+    </Link>
   );
 }

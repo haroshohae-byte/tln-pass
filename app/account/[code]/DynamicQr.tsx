@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 type QrState = {
   qrDataUrl: string;
@@ -14,7 +14,7 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
 
-  async function loadQr() {
+  const loadQr = useCallback(async () => {
     try {
       setError("");
       setLoading(true);
@@ -46,17 +46,22 @@ export default function DynamicQr({ passCode }: { passCode: string }) {
       setQr(null);
       setLoading(false);
     }
-  }
+  }, [passCode]);
 
   useEffect(() => {
-    loadQr();
+    const initial = window.setTimeout(() => {
+      loadQr();
+    }, 0);
 
     const interval = window.setInterval(() => {
       loadQr();
     }, 25000);
 
-    return () => window.clearInterval(interval);
-  }, [passCode]);
+    return () => {
+      window.clearTimeout(initial);
+      window.clearInterval(interval);
+    };
+  }, [loadQr]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {

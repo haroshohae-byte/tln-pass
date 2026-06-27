@@ -1,8 +1,15 @@
 import { redirect } from "next/navigation";
+import { getSiteSettings } from "../../lib/siteSettings";
 import { supabase } from "../../lib/supabase";
 
 async function submitPartnerApplication(formData: FormData) {
   "use server";
+
+  const settings = await getSiteSettings();
+
+  if (settings.partnerApplicationsEnabled === "false") {
+    throw new Error("Partner applications are currently closed");
+  }
 
   const business_name = String(formData.get("business_name") || "").trim();
   const category = String(formData.get("category") || "").trim();
@@ -40,7 +47,10 @@ async function submitPartnerApplication(formData: FormData) {
   redirect("/apply/success");
 }
 
-export default function ApplyPage() {
+export default async function ApplyPage() {
+  const settings = await getSiteSettings();
+  const applicationsClosed = settings.partnerApplicationsEnabled === "false";
+
   return (
     <main className="min-h-screen bg-black px-6 py-24 text-white">
       <section className="mx-auto grid max-w-7xl gap-16 lg:grid-cols-2">
@@ -83,6 +93,11 @@ export default function ApplyPage() {
             Send your business details for review.
           </p>
 
+          {applicationsClosed ? (
+            <div className="mt-8 rounded-[2rem] border border-white/10 bg-black p-8 text-zinc-300">
+              Partner applications are currently closed.
+            </div>
+          ) : (
           <form action={submitPartnerApplication} className="mt-8 space-y-5">
             <input
               name="business_name"
@@ -164,6 +179,7 @@ export default function ApplyPage() {
               Send application
             </button>
           </form>
+          )}
         </div>
       </section>
     </main>

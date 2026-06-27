@@ -4,6 +4,9 @@ import { useMemo, useState } from "react";
 import type { Lang } from "../../lib/i18n";
 import type { PartnerCard } from "./page";
 
+const heroImage =
+  "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?auto=format&fit=crop&w=1600&q=90";
+
 const text = {
   en: {
     badge: "TLN Pass partners",
@@ -22,6 +25,7 @@ const text = {
     found: "partners found",
     open: "Open",
     noResults: "No partners found.",
+    emptyText: "Try another search or category. New Tallinn partners are added regularly.",
     join: "Join Now",
   },
   ru: {
@@ -41,6 +45,7 @@ const text = {
     found: "партнёров найдено",
     open: "Открыть",
     noResults: "Партнёры не найдены.",
+    emptyText: "Попробуй другой поиск или категорию. Новые партнёры Tallinn добавляются регулярно.",
     join: "Купить",
   },
   ee: {
@@ -60,6 +65,7 @@ const text = {
     found: "partnerit leitud",
     open: "Ava",
     noResults: "Partnereid ei leitud.",
+    emptyText: "Proovi teist otsingut või kategooriat. Uusi Tallinna partnereid lisandub regulaarselt.",
     join: "Liitu",
   },
 };
@@ -183,21 +189,34 @@ export default function PartnersClient({
   return (
     <main className="min-h-screen bg-[#f5f5f7] px-5 py-14 text-[#1d1d1f]">
       <section className="mx-auto max-w-7xl">
-        <div className="mx-auto max-w-4xl text-center">
-          <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-            {t.badge}
-          </p>
+        <div className="fade-up overflow-hidden rounded-[2.4rem] bg-[#1d1d1f] text-white shadow-sm ring-1 ring-black/5">
+          <div className="grid min-h-[360px] lg:grid-cols-[1fr_0.85fr]">
+            <div className="flex flex-col justify-center p-8 md:p-12">
+              <p className="text-sm font-bold uppercase tracking-[0.25em] text-white/45">
+                {t.badge}
+              </p>
 
-          <h1 className="mt-5 text-5xl font-black leading-tight tracking-tight md:text-7xl">
-            {t.title}
-          </h1>
+              <h1 className="mt-5 max-w-3xl text-5xl font-black leading-tight tracking-tight md:text-7xl">
+                {t.title}
+              </h1>
 
-          <p className="mx-auto mt-6 max-w-2xl text-xl leading-8 text-zinc-600">
-            {t.subtitle}
-          </p>
+              <p className="mt-6 max-w-2xl text-xl leading-8 text-white/68">
+                {t.subtitle}
+              </p>
+            </div>
+
+            <div className="relative min-h-[240px]">
+              <img
+                src={heroImage}
+                alt="Tallinn restaurant"
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/65 via-black/10 to-transparent" />
+            </div>
+          </div>
         </div>
 
-        <div className="sticky top-20 z-30 mt-10 rounded-[2rem] bg-white p-3 shadow-sm ring-1 ring-black/5">
+        <div className="sticky top-20 z-30 mt-8 rounded-[2rem] bg-white p-3 shadow-sm ring-1 ring-black/5">
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -228,7 +247,7 @@ export default function PartnersClient({
         </p>
 
         {filteredPartners.length > 0 ? (
-          <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {filteredPartners.map((partner) => {
               const href = `/partners/${partner.slug || partner.id}`;
 
@@ -236,9 +255,9 @@ export default function PartnersClient({
                 <a
                   key={partner.id}
                   href={href}
-                  className="group overflow-hidden rounded-[2.4rem] bg-white shadow-sm ring-1 ring-black/5 transition hover:-translate-y-1"
+                  className="group overflow-hidden rounded-[1.8rem] bg-white shadow-sm ring-1 ring-black/5 transition duration-300 hover:-translate-y-1 hover:shadow-xl"
                 >
-                  <div className="relative h-72 bg-black">
+                  <div className="relative h-52 bg-black sm:h-64">
                     {partner.image_url ? (
                       <img
                         src={partner.image_url}
@@ -262,7 +281,7 @@ export default function PartnersClient({
                     </div>
                   </div>
 
-                  <div className="p-6">
+                  <div className="p-5">
                     {partner.offer && (
                       <p className="rounded-2xl bg-zinc-100 p-4 text-sm font-black text-zinc-700">
                         {partner.offer}
@@ -270,15 +289,17 @@ export default function PartnersClient({
                     )}
 
                     {partner.address && (
-                      <p className="mt-4 text-sm leading-6 text-zinc-500">
+                      <p className="mt-4 line-clamp-2 text-sm leading-6 text-zinc-500">
                         {partner.address}
                       </p>
                     )}
 
                     <div className="mt-6 flex items-center justify-between">
-                      <span className="font-black">{t.open}</span>
+                      <span className="rounded-full bg-black px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-white">
+                        TLN Pass
+                      </span>
                       <span className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
-                        →
+                        {t.open}
                       </span>
                     </div>
                   </div>
@@ -289,6 +310,9 @@ export default function PartnersClient({
         ) : (
           <div className="mt-8 rounded-[2.4rem] bg-white p-10 text-center shadow-sm ring-1 ring-black/5">
             <h2 className="text-4xl font-black">{t.noResults}</h2>
+            <p className="mx-auto mt-4 max-w-xl leading-7 text-zinc-600">
+              {t.emptyText}
+            </p>
           </div>
         )}
       </section>

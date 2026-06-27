@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function WaitlistSuccessPage() {
   return (
     <main className="min-h-screen bg-black px-6 py-24 text-white">
@@ -19,12 +21,12 @@ export default function WaitlistSuccessPage() {
           becomes available.
         </p>
 
-        <a
+        <Link
           href="/"
           className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
         >
           Back to home
-        </a>
+        </Link>
       </section>
     </main>
   );

@@ -1,25 +1,43 @@
+import LegalLayout from "../components/LegalLayout";
+
 export default function RefundPolicyPage() {
   return (
-    <main className="min-h-screen bg-[#f5f5f7] px-5 py-16 text-[#1d1d1f]">
-      <section className="mx-auto max-w-4xl rounded-[2.4rem] bg-white p-8 shadow-sm ring-1 ring-black/5 md:p-12">
-        <p className="text-sm font-bold uppercase tracking-[0.25em] text-zinc-500">
-          Legal
-        </p>
-
-        <h1 className="mt-5 text-5xl font-black">Refund Policy</h1>
-
-        <div className="mt-8 space-y-6 text-lg leading-8 text-zinc-600">
-          <p>
-            TLN Pass is a digital membership service. Refund requests are
-            reviewed individually depending on the situation.
-          </p>
-          <p>
-            Subscription cancellation stops future renewals. It does not
-            automatically refund previous membership periods unless required by
-            applicable law or approved by TLN Pass support.
-          </p>
-        </div>
-      </section>
-    </main>
+    <LegalLayout
+      label="Legal"
+      title="Refund Policy"
+      updated="June 25, 2026"
+      intro="TLN Pass is a digital membership product. Refunds and cancellations are handled clearly and reviewed case by case."
+      cards={[
+        {
+          title: "Refunds",
+          text: "Refund requests are reviewed individually depending on payment status, usage and legal requirements.",
+        },
+        {
+          title: "Cancellation",
+          text: "Cancellation stops future renewals. It does not automatically refund previous periods.",
+        },
+        {
+          title: "Billing support",
+          text: "For payment questions, contact support with the email used at checkout.",
+        },
+      ]}
+      sections={[
+        {
+          title: "Refund review",
+          items: [
+            "We may review whether the pass was activated, used or affected by a technical issue.",
+            "Approved refunds are returned through the original payment provider where possible.",
+            "Stripe processing time can vary after TLN Pass approves a refund.",
+          ],
+        },
+        {
+          title: "Membership access",
+          items: [
+            "Access may stop after a refund is approved.",
+            "If a subscription is cancelled, future renewals stop while the current membership period may remain active according to the plan.",
+          ],
+        },
+      ]}
+    />
   );
 }

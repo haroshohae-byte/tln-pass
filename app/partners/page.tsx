@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { normalizeLang, type Lang } from "../../lib/i18n";
+import { isPublicLaunchPartner } from "../../lib/publicLaunchFilters";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 import PartnersClient from "./PartnersClient";
 
@@ -36,8 +37,8 @@ export default async function PartnersPage({
   }
 
   return (
-    <PartnersClient
-      partners={(data || []) as PartnerCard[]}
+      <PartnersClient
+      partners={((data || []) as PartnerCard[]).filter(isPublicLaunchPartner)}
       currentLang={lang as Lang}
       initialCategory={params.category || "all"}
       initialSearch={params.search || ""}

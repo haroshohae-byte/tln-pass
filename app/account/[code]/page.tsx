@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { hashDeviceToken } from "../../../lib/device";
 import { supabaseAdmin } from "../../../lib/supabaseAdmin";
 import DynamicQr from "./DynamicQr";
@@ -46,12 +47,12 @@ export default async function AccountPage({
             Account not found.
           </h1>
 
-          <a
+          <Link
             href="/join"
             className="mt-10 inline-flex rounded-full bg-white px-8 py-4 font-black text-black"
           >
             Join now
-          </a>
+          </Link>
         </section>
       </main>
     );
@@ -128,19 +129,19 @@ export default async function AccountPage({
           </div>
 
           <div className="mt-10 flex flex-wrap gap-3">
-            <a
+            <Link
               href="/partners"
               className="rounded-full bg-white px-8 py-4 font-black text-black transition hover:scale-105"
             >
               Explore partners
-            </a>
+            </Link>
 
-            <a
+            <Link
               href={`/account/start/${pass.pass_code}`}
               className="rounded-full border border-white/10 px-8 py-4 font-black text-white hover:bg-white hover:text-black"
             >
               Open on this device
-            </a>
+            </Link>
           </div>
         </div>
 
@@ -155,12 +156,12 @@ export default async function AccountPage({
                 the first setup.
               </p>
 
-              <a
+              <Link
                 href={`/account/start/${pass.pass_code}`}
                 className="mt-8 inline-flex rounded-full bg-amber-300 px-8 py-4 font-black text-black"
               >
                 Open on this device
-              </a>
+              </Link>
             </div>
           ) : isActive ? (
             <DynamicQr passCode={pass.pass_code} />

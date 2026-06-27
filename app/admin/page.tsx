@@ -1,159 +1,484 @@
-import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import type { Metadata } from "next";
+import type { ReactNode } from "react";
+import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { revalidatePath } from "next/cache";
+import CopyButton from "../components/CopyButton";
+import { normalizeLang, type Lang } from "../../lib/i18n";
 import { supabaseAdmin } from "../../lib/supabaseAdmin";
 
-type PartnerApplication = {
+export const runtime = "nodejs";
+
+export const metadata: Metadata = {
+  title: "TLN Pass Admin",
+  robots: {
+    index: false,
+    follow: false,
+  },
+};
+
+type Member = {
   id: string;
-  business_name: string;
-  category: string;
-  address: string | null;
-  phone: string | null;
-  website: string | null;
-  instagram: string | null;
-  opening_hours: string | null;
-  offer: string | null;
-  contact_email: string;
-  description: string | null;
-  status: string;
-  created_at: string;
+  email?: string | null;
+  full_name?: string | null;
+  pass_code?: string | null;
+  status?: string | null;
+  subscription_status?: string | null;
+  plan?: string | null;
+  plan_id?: string | null;
+  valid_until?: string | null;
+  current_period_end?: string | null;
+  created_at?: string | null;
+  device_hash?: string | null;
+  last_payment_status?: string | null;
+  canceled_at?: string | null;
 };
 
 type Partner = {
   id: string;
-  application_id: string | null;
-  business_name: string;
-  category: string;
-  status: string;
-  edit_token: string | null;
-  slug: string | null;
-  offer: string | null;
+  business_name?: string | null;
+  category?: string | null;
+  status?: string | null;
+  slug?: string | null;
+  edit_token?: string | null;
+  offer?: string | null;
+  address?: string | null;
+  opening_hours?: string | null;
+  phone?: string | null;
+  website?: string | null;
+  instagram?: string | null;
+  image_url?: string | null;
+  created_at?: string | null;
 };
 
-type MemberPass = {
+type PartnerApplication = {
   id: string;
-  full_name: string;
-  email: string;
-  pass_code: string;
-  plan: string;
-  status: string;
-  valid_until: string;
-  stripe_subscription_id: string | null;
-  last_payment_status: string | null;
-  created_at: string;
-};
-
-type WaitlistMember = {
-  id: string;
-  name: string;
-  email: string;
-  interest: string | null;
-  created_at: string;
+  business_name?: string | null;
+  category?: string | null;
+  contact_name?: string | null;
+  name?: string | null;
+  email?: string | null;
+  contact_email?: string | null;
+  phone?: string | null;
+  address?: string | null;
+  message?: string | null;
+  description?: string | null;
+  status?: string | null;
+  created_at?: string | null;
 };
 
 type UsageLog = {
   id: string;
-  pass_id: string | null;
-  qr_token: string | null;
-  result: string;
-  created_at: string;
+  partner_id?: string | null;
+  pass_id?: string | null;
+  member_id?: string | null;
+  pass_code?: string | null;
+  status?: string | null;
+  result?: string | null;
+  qr_token?: string | null;
+  user_agent?: string | null;
+  created_at?: string | null;
 };
 
-function createToken() {
-  return crypto.randomUUID().replaceAll("-", "");
+type MenuItem = {
+  id: string;
+  partner_id?: string | null;
+  is_available?: boolean | null;
+  is_active?: boolean | null;
+};
+
+type PartnerPageView = {
+  id: string;
+  partner_id?: string | null;
+  created_at?: string | null;
+};
+
+type PartnerClickEvent = {
+  id: string;
+  partner_id?: string | null;
+  event_type?: string | null;
+  created_at?: string | null;
+};
+
+type SiteSetting = {
+  key: string;
+  value: string | null;
+};
+
+const adminCopy = {
+  en: {
+    dashboard: "Dashboard",
+    overview: "Dashboard overview",
+    analytics: "Analytics",
+    revenue: "Revenue",
+    members: "Members",
+    partners: "Partners",
+    addPartner: "Add partner",
+    applications: "Applications",
+    qrLogs: "QR logs",
+    siteSettings: "Site settings",
+    save: "Save",
+    delete: "Delete",
+    approve: "Approve",
+    reject: "Reject",
+    public: "Public",
+    active: "Active",
+    pending: "Pending",
+    hidden: "Hidden",
+    rejected: "Rejected",
+    search: "Search",
+    status: "Status",
+    category: "Category",
+    logout: "Logout",
+    copy: "Copy",
+    copied: "Copied",
+  },
+  ru: {
+    dashboard: "Панель",
+    overview: "Обзор",
+    analytics: "Аналитика",
+    revenue: "Доход",
+    members: "Пользователи",
+    partners: "Партнёры",
+    addPartner: "Добавить партнёра",
+    applications: "Заявки",
+    qrLogs: "QR проверки",
+    siteSettings: "Настройки сайта",
+    save: "Сохранить",
+    delete: "Удалить",
+    approve: "Одобрить",
+    reject: "Отклонить",
+    public: "Публичная",
+    active: "Активные",
+    pending: "Ожидают",
+    hidden: "Скрытые",
+    rejected: "Отклонённые",
+    search: "Поиск",
+    status: "Статус",
+    category: "Категория",
+    logout: "Выйти",
+    copy: "Копировать",
+    copied: "Скопировано",
+  },
+  ee: {
+    dashboard: "Töölaud",
+    overview: "Ülevaade",
+    analytics: "Analüütika",
+    revenue: "Tulu",
+    members: "Liikmed",
+    partners: "Partnerid",
+    addPartner: "Lisa partner",
+    applications: "Taotlused",
+    qrLogs: "QR logid",
+    siteSettings: "Saidi seaded",
+    save: "Salvesta",
+    delete: "Kustuta",
+    approve: "Kinnita",
+    reject: "Lükka tagasi",
+    public: "Avalik",
+    active: "Aktiivne",
+    pending: "Ootel",
+    hidden: "Peidetud",
+    rejected: "Tagasi lükatud",
+    search: "Otsi",
+    status: "Staatus",
+    category: "Kategooria",
+    logout: "Logi välja",
+    copy: "Kopeeri",
+    copied: "Kopeeritud",
+  },
+} as const;
+
+const memberStatuses = ["active", "trialing", "inactive", "canceled", "past_due"];
+const partnerStatuses = ["approved", "pending", "hidden", "rejected"];
+const partnerCategories = [
+  "restaurants",
+  "cafes",
+  "bars",
+  "fitness",
+  "beauty",
+  "entertainment",
+  "events",
+];
+const siteSettingKeys = [
+  "instagram_url",
+  "tiktok_url",
+  "support_email",
+  "business_email",
+  "contact_phone",
+  "main_city",
+  "hero_title",
+  "hero_subtitle",
+  "homepage_hero_image",
+  "contact_image",
+  "membership_price_texts",
+  "partner_applications_enabled",
+  "enable_partner_applications",
+  "stripe_payments_enabled",
+  "maintenance_mode",
+  "announcement_banner",
+];
+
+function adminSecret() {
+  return (
+    process.env.ADMIN_SECRET ||
+    process.env.ADMIN_PASSWORD ||
+    process.env.TLN_ADMIN_SECRET ||
+    ""
+  );
 }
 
-function createSlug(name: string) {
-  const base =
-    name
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 60) || "partner";
+async function isAdmin() {
+  const cookieStore = await cookies();
+  const saved = cookieStore.get("tln_admin_secret")?.value;
+  const secret = adminSecret();
 
-  return `${base}-${Math.random().toString(36).slice(2, 7)}`;
+  return Boolean(secret && saved && saved === secret);
 }
 
-function formatDate(date: string) {
-  return new Intl.DateTimeFormat("en-GB", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(date));
-}
+async function adminLogin(formData: FormData) {
+  "use server";
 
-async function requireAdmin() {
-  const adminSecret = process.env.ADMIN_SESSION_SECRET;
+  const password = String(formData.get("password") || "");
+  const secret = adminSecret();
 
-  if (!adminSecret) throw new Error("Missing ADMIN_SESSION_SECRET");
+  if (!secret || password !== secret) {
+    redirect("/admin?error=1");
+  }
 
   const cookieStore = await cookies();
-  const adminCookie = cookieStore.get("tln_admin")?.value;
+  cookieStore.set("tln_admin_secret", secret, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 7,
+  });
 
-  if (adminCookie !== adminSecret) {
-    redirect("/admin-login");
-  }
+  redirect("/admin");
 }
 
-async function logoutAdmin() {
+async function adminLogout() {
   "use server";
 
   const cookieStore = await cookies();
-  cookieStore.delete("tln_admin");
+  cookieStore.delete("tln_admin_secret");
 
-  redirect("/admin-login");
+  redirect("/admin");
+}
+
+async function requireAdmin() {
+  if (!(await isAdmin())) {
+    throw new Error("Admin access required");
+  }
+}
+
+function normalizeManagedTable(value: string) {
+  return value === "members" ? "members" : "member_passes";
+}
+
+async function updateMemberStatus(formData: FormData) {
+  "use server";
+
+  await requireAdmin();
+
+  const table = normalizeManagedTable(String(formData.get("member_table") || ""));
+  const memberId = String(formData.get("member_id") || "");
+  const status = String(formData.get("subscription_status") || "inactive");
+  const column = table === "members" ? "subscription_status" : "status";
+
+  if (!memberStatuses.includes(status)) {
+    throw new Error("Invalid member status");
+  }
+
+  const { error } = await supabaseAdmin
+    .from(table)
+    .update({ [column]: status, updated_at: new Date().toISOString() })
+    .eq("id", memberId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin");
+}
+
+async function resetDeviceLock(formData: FormData) {
+  "use server";
+
+  await requireAdmin();
+
+  const table = normalizeManagedTable(String(formData.get("member_table") || ""));
+  const memberId = String(formData.get("member_id") || "");
+
+  const { error } = await supabaseAdmin
+    .from(table)
+    .update({ device_hash: null, updated_at: new Date().toISOString() })
+    .eq("id", memberId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin");
+}
+
+async function updatePartnerStatus(formData: FormData) {
+  "use server";
+
+  await requireAdmin();
+
+  const partnerId = String(formData.get("partner_id") || "");
+  const status = String(formData.get("status") || "approved");
+
+  if (!partnerStatuses.includes(status)) {
+    throw new Error("Invalid partner status");
+  }
+
+  const { error } = await supabaseAdmin
+    .from("partners")
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", partnerId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/partners");
+}
+
+async function regeneratePartnerToken(formData: FormData) {
+  "use server";
+
+  await requireAdmin();
+
+  const partnerId = String(formData.get("partner_id") || "");
+
+  const { error } = await supabaseAdmin
+    .from("partners")
+    .update({ edit_token: crypto.randomUUID(), updated_at: new Date().toISOString() })
+    .eq("id", partnerId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin");
+}
+
+async function deletePartner(formData: FormData) {
+  "use server";
+
+  await requireAdmin();
+
+  const partnerId = String(formData.get("partner_id") || "");
+
+  await supabaseAdmin
+    .from("partner_menu_items")
+    .delete()
+    .eq("partner_id", partnerId);
+
+  const { error } = await supabaseAdmin
+    .from("partners")
+    .delete()
+    .eq("id", partnerId);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/partners");
+}
+
+function slugify(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9-]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "");
+}
+
+async function createPartner(formData: FormData) {
+  "use server";
+
+  await requireAdmin();
+
+  const businessName = String(formData.get("business_name") || "").trim();
+
+  if (!businessName) {
+    throw new Error("Business name is required");
+  }
+
+  const payload = {
+    business_name: businessName,
+    category: String(formData.get("category") || "restaurants").trim(),
+    slug: slugify(String(formData.get("slug") || businessName)) || null,
+    address: String(formData.get("address") || "").trim() || null,
+    offer: String(formData.get("offer") || "").trim() || null,
+    status: String(formData.get("status") || "approved"),
+    edit_token: crypto.randomUUID(),
+  };
+
+  const { error } = await supabaseAdmin.from("partners").insert(payload);
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/partners");
 }
 
 async function approveApplication(formData: FormData) {
   "use server";
 
-  const id = String(formData.get("id") || "");
+  await requireAdmin();
 
-  const { data: application, error: fetchError } = await supabaseAdmin
+  const applicationId = String(formData.get("application_id") || "");
+
+  const { data: application, error: getError } = await supabaseAdmin
     .from("partner_applications")
     .select("*")
-    .eq("id", id)
-    .single();
-
-  if (fetchError || !application) {
-    throw new Error(fetchError?.message || "Application not found");
-  }
-
-  const app = application as PartnerApplication;
-
-  const { data: existingPartner } = await supabaseAdmin
-    .from("partners")
-    .select("id")
-    .eq("application_id", id)
+    .eq("id", applicationId)
     .maybeSingle();
 
-  if (!existingPartner) {
-    const { error: insertError } = await supabaseAdmin.from("partners").insert({
-      application_id: app.id,
-      business_name: app.business_name,
-      category: app.category,
-      address: app.address,
-      phone: app.phone,
-      website: app.website,
-      instagram: app.instagram,
-      opening_hours: app.opening_hours,
-      offer: app.offer,
-      description: app.description,
-      status: "approved",
-      slug: createSlug(app.business_name),
-      edit_token: createToken(),
-      rules: "Show your TLN Pass QR code before payment.",
-    });
-
-    if (insertError) throw new Error(insertError.message);
+  if (getError) {
+    throw new Error(getError.message);
   }
 
-  const { error: updateError } = await supabaseAdmin
+  if (!application) {
+    throw new Error("Application not found");
+  }
+
+  const businessName = String(application.business_name || "New partner").trim();
+  const editToken = crypto.randomUUID();
+
+  const { error: insertError } = await supabaseAdmin.from("partners").insert({
+    business_name: businessName,
+    category: application.category || "restaurants",
+    address: application.address || null,
+    phone: application.phone || null,
+    website: application.website || null,
+    instagram: application.instagram || null,
+    opening_hours: application.opening_hours || null,
+    offer: application.offer || null,
+    description: application.description || application.message || null,
+    status: "approved",
+    slug: slugify(businessName) || null,
+    edit_token: editToken,
+  });
+
+  if (insertError) {
+    throw new Error(insertError.message);
+  }
+
+  await supabaseAdmin
     .from("partner_applications")
     .update({ status: "approved" })
-    .eq("id", id);
-
-  if (updateError) throw new Error(updateError.message);
+    .eq("id", applicationId);
 
   revalidatePath("/admin");
   revalidatePath("/partners");
@@ -162,392 +487,1254 @@ async function approveApplication(formData: FormData) {
 async function rejectApplication(formData: FormData) {
   "use server";
 
-  const id = String(formData.get("id") || "");
+  await requireAdmin();
+
+  const applicationId = String(formData.get("application_id") || "");
 
   const { error } = await supabaseAdmin
     .from("partner_applications")
     .update({ status: "rejected" })
-    .eq("id", id);
+    .eq("id", applicationId);
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    throw new Error(error.message);
+  }
 
   revalidatePath("/admin");
 }
 
-async function setMemberStatus(formData: FormData) {
+async function updateSiteSetting(formData: FormData) {
   "use server";
 
-  const id = String(formData.get("id") || "");
-  const status = String(formData.get("status") || "");
-
-  if (!id || !status) throw new Error("Missing member id or status");
-
-  const { error } = await supabaseAdmin
-    .from("member_passes")
-    .update({
-      status,
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-
-  if (error) throw new Error(error.message);
-
-  revalidatePath("/admin");
-}
-
-export default async function AdminPage() {
   await requireAdmin();
 
-  const [
-    applicationsResult,
-    waitlistResult,
-    partnersResult,
-    membersResult,
-    logsResult,
-  ] = await Promise.all([
-    supabaseAdmin
-      .from("partner_applications")
-      .select("*")
-      .order("created_at", { ascending: false }),
-    supabaseAdmin
-      .from("waitlist")
-      .select("*")
-      .order("created_at", { ascending: false }),
-    supabaseAdmin.from("partners").select("*"),
-    supabaseAdmin
-      .from("member_passes")
-      .select("*")
-      .order("created_at", { ascending: false }),
-    supabaseAdmin
-      .from("pass_usage_logs")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(20),
-  ]);
+  const key = String(formData.get("key") || "");
+  const value = String(formData.get("value") || "");
 
-  if (applicationsResult.error) throw new Error(applicationsResult.error.message);
-  if (membersResult.error) throw new Error(membersResult.error.message);
+  if (!siteSettingKeys.includes(key)) {
+    throw new Error("Invalid site setting");
+  }
 
-  const applicationList = (applicationsResult.data ||
-    []) as PartnerApplication[];
-  const waitlistMembers = (waitlistResult.data || []) as WaitlistMember[];
-  const partnerList = (partnersResult.data || []) as Partner[];
-  const memberList = (membersResult.data || []) as MemberPass[];
-  const usageLogs = (logsResult.data || []) as UsageLog[];
+  const { error } = await supabaseAdmin
+    .from("site_settings")
+    .upsert({ key, value, updated_at: new Date().toISOString() });
 
-  const partnerByApplicationId = new Map(
-    partnerList
-      .filter((partner) => partner.application_id)
-      .map((partner) => [partner.application_id, partner])
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  revalidatePath("/admin");
+  revalidatePath("/");
+  revalidatePath("/contact");
+}
+
+async function safeSelect<T>(
+  table: string,
+  query: (
+    builder: ReturnType<typeof supabaseAdmin.from>
+  ) => PromiseLike<{ data: unknown; error: { message: string } | null }>,
+  fallback: T
+): Promise<T> {
+  try {
+    const result = await query(supabaseAdmin.from(table));
+
+    if (result.error) {
+      return fallback;
+    }
+
+    return result.data as T;
+  } catch {
+    return fallback;
+  }
+}
+
+async function fetchMembers() {
+  const passes = await safeSelect<Member[] | null>(
+    "member_passes",
+    (q) => q.select("*").order("created_at", { ascending: false }).limit(250),
+    null
   );
 
-  const activeMembers = memberList.filter(
-    (member) => member.status === "active"
-  ).length;
+  if (passes) {
+    return { table: "member_passes", rows: passes };
+  }
 
-  const pendingApplications = applicationList.filter(
-    (application) => application.status === "pending"
-  ).length;
+  const rows = await safeSelect<Member[]>(
+    "members",
+    (q) => q.select("*").order("created_at", { ascending: false }).limit(250),
+    []
+  );
 
-  const approvedPartners = partnerList.filter(
-    (partner) => partner.status === "approved"
-  ).length;
+  return { table: "members", rows };
+}
 
-  const stats = [
-    ["Active members", String(activeMembers)],
-    ["Approved partners", String(approvedPartners)],
-    ["Partner applications", String(applicationList.length)],
-    ["Pending review", String(pendingApplications)],
-    ["Waitlist", String(waitlistMembers.length)],
-    ["QR checks", String(usageLogs.length)],
-  ];
+function formatDate(value?: string | null) {
+  if (!value) {
+    return "n/a";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(value));
+}
+
+function formatDateTime(value?: string | null) {
+  if (!value) {
+    return "n/a";
+  }
+
+  return new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(new Date(value));
+}
+
+function isWithin(value: string | null | undefined, days: number) {
+  if (!value) {
+    return false;
+  }
+
+  return new Date(value).getTime() >= Date.now() - days * 24 * 60 * 60 * 1000;
+}
+
+function isToday(value?: string | null) {
+  if (!value) {
+    return false;
+  }
+
+  const date = new Date(value);
+  const today = new Date();
+  return date.toDateString() === today.toDateString();
+}
+
+function memberStatus(member: Member) {
+  return member.status || member.subscription_status || "inactive";
+}
+
+function memberPlan(member: Member) {
+  const value = `${member.plan_id || member.plan || ""}`.toLowerCase();
+
+  if (value.includes("14") || value.includes("starter")) {
+    return "14day";
+  }
+
+  if (value.includes("6") || value.includes("half")) {
+    return "6months";
+  }
+
+  if (value.includes("year")) {
+    return "yearly";
+  }
+
+  if (value.includes("month")) {
+    return "monthly";
+  }
+
+  return "monthly";
+}
+
+function planPrice(planId: string) {
+  if (planId === "14day") {
+    return 7.99;
+  }
+
+  if (planId === "6months") {
+    return 99;
+  }
+
+  if (planId === "yearly") {
+    return 179;
+  }
+
+  return 19.99;
+}
+
+function planMonthlyValue(planId: string) {
+  if (planId === "6months") {
+    return 99 / 6;
+  }
+
+  if (planId === "yearly") {
+    return 179 / 12;
+  }
+
+  if (planId === "14day") {
+    return 0;
+  }
+
+  return 19.99;
+}
+
+function euro(value: number) {
+  return `€${value.toFixed(2)}`;
+}
+
+function publicPartnerUrl(partner: Partner) {
+  return `/partners/${partner.slug || partner.id}`;
+}
+
+function partnerDashboardUrl(partner: Partner) {
+  return partner.edit_token ? `/partner-dashboard/${partner.edit_token}` : "";
+}
+
+function countBy<T>(items: T[], getKey: (item: T) => string | null | undefined) {
+  const map = new Map<string, number>();
+
+  for (const item of items) {
+    const key = getKey(item);
+
+    if (!key) {
+      continue;
+    }
+
+    map.set(key, (map.get(key) || 0) + 1);
+  }
+
+  return map;
+}
+
+function categoryKey(value?: string | null) {
+  const category = String(value || "").toLowerCase();
+
+  if (category.includes("restaurant") || category.includes("restoran")) return "restaurants";
+  if (category.includes("cafe") || category.includes("coffee") || category.includes("kohvik")) return "cafes";
+  if (category.includes("bar") || category.includes("pub")) return "bars";
+  if (category.includes("fitness") || category.includes("gym") || category.includes("sport")) return "fitness";
+  if (category.includes("beauty") || category.includes("spa") || category.includes("salon")) return "beauty";
+  if (category.includes("event") || category.includes("club")) return "events";
+  return "entertainment";
+}
+
+function qrStatus(log: UsageLog) {
+  const value = log.status || log.result || "unknown";
+
+  if (value === "active") return "allowed";
+  if (value === "expired_qr" || value === "expired") return "expired";
+  if (value === "inactive_pass") return "denied";
+  if (value === "already_used") return "already used";
+
+  return value;
+}
+
+function baseUrlFromHeaders(host: string | null) {
+  if (!host) {
+    return process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
+  }
+
+  const isLocal =
+    host.includes("localhost") ||
+    host.includes("127.0.0.1") ||
+    host.startsWith("192.168.") ||
+    host.startsWith("10.");
+
+  return `${isLocal ? "http" : "https"}://${host}`;
+}
+
+export default async function AdminPage({
+  searchParams,
+}: {
+  searchParams: Promise<{
+    error?: string;
+    member_search?: string;
+    member_status?: string;
+    partner_search?: string;
+    partner_status?: string;
+    partner_category?: string;
+    qr_range?: string;
+  }>;
+}) {
+  const params = await searchParams;
+  const secret = adminSecret();
+  const cookieStore = await cookies();
+  const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
+  const t = adminCopy[lang as Lang];
+
+  if (!secret) {
+    return (
+      <main className="min-h-screen bg-[#f5f5f7] px-5 py-16 text-[#1d1d1f]">
+        <section className="mx-auto max-w-2xl rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
+          <h1 className="text-4xl font-black">Admin secret missing</h1>
+          <p className="mt-4 leading-7 text-zinc-600">
+            Add <b>ADMIN_SECRET</b> to your environment, restart the server,
+            then open /admin again.
+          </p>
+        </section>
+      </main>
+    );
+  }
+
+  if (!(await isAdmin())) {
+    return (
+      <main className="min-h-screen bg-[#f5f5f7] px-5 py-16 text-[#1d1d1f]">
+        <section className="mx-auto max-w-md rounded-[2rem] bg-white p-8 shadow-sm ring-1 ring-black/5">
+          <p className="text-sm font-black uppercase tracking-[0.25em] text-zinc-400">
+            TLN Pass
+          </p>
+
+          <h1 className="mt-4 text-5xl font-black tracking-tight">Admin</h1>
+
+          {params.error && (
+            <p className="mt-4 rounded-2xl bg-red-50 p-4 font-bold text-red-600">
+              Wrong password.
+            </p>
+          )}
+
+          <form action={adminLogin} className="mt-6 grid gap-4">
+            <input
+              name="password"
+              type="password"
+              placeholder="Admin secret"
+              className="rounded-2xl border border-black/10 bg-zinc-100 px-5 py-4 font-bold outline-none focus:bg-white"
+              required
+            />
+
+            <button className="rounded-full bg-black px-6 py-4 font-black text-white">
+              Login
+            </button>
+          </form>
+        </section>
+      </main>
+    );
+  }
+
+  const headersList = await headers();
+  const baseUrl = baseUrlFromHeaders(headersList.get("host"));
+
+  const [
+    memberResult,
+    partners,
+    applications,
+    usageLogs,
+    menuItems,
+    pageViews,
+    clickEvents,
+    settings,
+  ] = await Promise.all([
+    fetchMembers(),
+    safeSelect<Partner[]>(
+      "partners",
+      (q) => q.select("*").order("created_at", { ascending: false }).limit(250),
+      []
+    ),
+    safeSelect<PartnerApplication[]>(
+      "partner_applications",
+      (q) => q.select("*").order("created_at", { ascending: false }).limit(100),
+      []
+    ),
+    safeSelect<UsageLog[]>(
+      "pass_usage_logs",
+      (q) => q.select("*").order("created_at", { ascending: false }).limit(250),
+      []
+    ),
+    safeSelect<MenuItem[]>(
+      "partner_menu_items",
+      (q) => q.select("*").limit(1000),
+      []
+    ),
+    safeSelect<PartnerPageView[]>(
+      "partner_page_views",
+      (q) => q.select("*").order("created_at", { ascending: false }).limit(1000),
+      []
+    ),
+    safeSelect<PartnerClickEvent[]>(
+      "partner_click_events",
+      (q) => q.select("*").order("created_at", { ascending: false }).limit(1000),
+      []
+    ),
+    safeSelect<SiteSetting[]>(
+      "site_settings",
+      (q) => q.select("key,value").order("key"),
+      []
+    ),
+  ]);
+
+  const members = memberResult.rows;
+  const memberTable = memberResult.table;
+  const menuCountByPartner = countBy(menuItems, (item) => item.partner_id);
+  const qrCountByPartner = countBy(usageLogs, (log) => log.partner_id);
+  const viewCountByPartner = countBy(pageViews, (view) => view.partner_id);
+  const clickCountByPartner = countBy(clickEvents, (event) => event.partner_id);
+  const partnerNameById = new Map(
+    partners.map((partner) => [partner.id, partner.business_name || "Partner"])
+  );
+
+  const memberSearch = String(params.member_search || "").toLowerCase();
+  const memberStatusFilter = String(params.member_status || "all");
+  const partnerSearch = String(params.partner_search || "").toLowerCase();
+  const partnerStatusFilter = String(params.partner_status || "all");
+  const partnerCategoryFilter = String(params.partner_category || "all");
+  const qrRange = String(params.qr_range || "7");
+
+  const activeMembers = members.filter((member) =>
+    ["active", "trialing"].includes(memberStatus(member))
+  );
+  const trialMembers = members.filter((member) => memberStatus(member) === "trialing");
+  const canceledMembers = members.filter((member) => memberStatus(member) === "canceled");
+  const failedPayments = members.filter((member) =>
+    ["failed", "past_due", "unpaid"].includes(
+      member.last_payment_status || memberStatus(member)
+    )
+  );
+  const approvedPartners = partners.filter((partner) => partner.status === "approved");
+  const pendingPartners = partners.filter((partner) => partner.status === "pending");
+  const hiddenPartners = partners.filter((partner) => partner.status === "hidden");
+  const rejectedPartners = partners.filter((partner) => partner.status === "rejected");
+  const waitingApplications = applications.filter(
+    (application) => (application.status || "pending") === "pending"
+  );
+  const partnersMissingImportantInfo = partners.filter(
+    (partner) =>
+      !partner.image_url ||
+      !partner.address ||
+      !partner.offer ||
+      !partner.opening_hours ||
+      (menuCountByPartner.get(partner.id) || 0) === 0
+  );
+  const todayQrScans = usageLogs.filter((log) => isToday(log.created_at));
+  const qrStatusBreakdown = countBy(usageLogs, (log) => qrStatus(log));
+  const clickTypeBreakdown = countBy(clickEvents, (event) => event.event_type);
+  const activeRevenueMembers = activeMembers.filter(
+    (member) => memberStatus(member) !== "trialing"
+  );
+  const revenueEstimate = activeRevenueMembers.reduce(
+    (sum, member) => sum + planPrice(memberPlan(member)),
+    0
+  );
+  const mrrEstimate = activeRevenueMembers.reduce(
+    (sum, member) => sum + planMonthlyValue(memberPlan(member)),
+    0
+  );
+
+  const planCounts = {
+    "14day": members.filter((member) => memberPlan(member) === "14day").length,
+    monthly: members.filter((member) => memberPlan(member) === "monthly").length,
+    "6months": members.filter((member) => memberPlan(member) === "6months").length,
+    yearly: members.filter((member) => memberPlan(member) === "yearly").length,
+  };
+
+  const filteredMembers = members.filter((member) => {
+    const status = memberStatus(member);
+    const searchText = [
+      member.email,
+      member.full_name,
+      member.pass_code,
+      member.plan,
+      member.plan_id,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      (!memberSearch || searchText.includes(memberSearch)) &&
+      (memberStatusFilter === "all" || status === memberStatusFilter)
+    );
+  });
+
+  const filteredPartners = partners.filter((partner) => {
+    const searchText = [
+      partner.business_name,
+      partner.category,
+      partner.address,
+      partner.offer,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return (
+      (!partnerSearch || searchText.includes(partnerSearch)) &&
+      (partnerStatusFilter === "all" || partner.status === partnerStatusFilter) &&
+      (partnerCategoryFilter === "all" ||
+        categoryKey(partner.category) === partnerCategoryFilter)
+    );
+  });
+
+  const filteredQrLogs = usageLogs.filter((log) => {
+    if (qrRange === "all") {
+      return true;
+    }
+
+    if (qrRange === "today") {
+      return isToday(log.created_at);
+    }
+
+    return isWithin(log.created_at, Number(qrRange || 7));
+  });
+
+  const popularPartners = [...partners]
+    .sort((a, b) => {
+      const aScore = (qrCountByPartner.get(a.id) || 0) + (viewCountByPartner.get(a.id) || 0);
+      const bScore = (qrCountByPartner.get(b.id) || 0) + (viewCountByPartner.get(b.id) || 0);
+      return bScore - aScore;
+    })
+    .slice(0, 6);
+
+  const partnersWithoutViews = partners.filter(
+    (partner) => (viewCountByPartner.get(partner.id) || 0) === 0
+  );
+  const highViewsLowQr = partners.filter(
+    (partner) =>
+      (viewCountByPartner.get(partner.id) || 0) >= 5 &&
+      (qrCountByPartner.get(partner.id) || 0) <= 1
+  );
+  const categoryStats = partnerCategories.map((category) => ({
+    category,
+    count: partners.filter((partner) => categoryKey(partner.category) === category).length,
+  }));
+
+  const settingMap = new Map(settings.map((item) => [item.key, item.value || ""]));
 
   return (
-    <main className="min-h-screen bg-black px-6 py-24 text-white">
-      <section className="mx-auto max-w-7xl">
-        <div className="flex flex-col justify-between gap-6 md:flex-row md:items-end">
+    <main className="min-h-screen bg-[#f5f5f7] px-5 py-8 text-[#1d1d1f]">
+      <section className="mx-auto max-w-[1500px]">
+        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
           <div>
-            <p className="text-sm font-bold uppercase tracking-[0.3em] text-amber-300/70">
-              Admin command center
+            <p className="text-sm font-black uppercase tracking-[0.25em] text-zinc-400">
+              TLN Pass
             </p>
 
-            <h1 className="mt-4 text-6xl font-black tracking-tight md:text-8xl">
-              TLN Pass control.
+            <h1 className="mt-3 text-6xl font-black tracking-tight md:text-8xl">
+              {t.dashboard}
             </h1>
-
-            <p className="mt-6 max-w-2xl text-xl leading-8 text-zinc-400">
-              Manage members, subscriptions, partner applications, public cards
-              and QR verification logs.
-            </p>
           </div>
 
-          <div className="flex flex-col gap-3 sm:flex-row">
+          <form action={adminLogout}>
+            <button className="rounded-full bg-black px-6 py-4 font-black text-white">
+              {t.logout}
+            </button>
+          </form>
+        </div>
+
+        <nav className="mt-8 flex gap-2 overflow-x-auto rounded-full bg-white p-2 shadow-sm ring-1 ring-black/5">
+          {[
+            [t.overview, "#overview"],
+            [t.analytics, "#analytics"],
+            [t.members, "#members"],
+            [t.partners, "#partners"],
+            [t.applications, "#applications"],
+            [t.siteSettings, "#settings"],
+          ].map(([label, href]) => (
             <a
-              href="/partners"
-              className="rounded-full bg-gradient-to-r from-amber-200 via-yellow-400 to-amber-500 px-8 py-4 text-center font-black text-black transition hover:scale-105"
+              key={href}
+              href={href}
+              className="min-w-max rounded-full bg-zinc-100 px-5 py-3 text-sm font-black text-zinc-700 transition hover:bg-black hover:text-white"
             >
-              Public partners
+              {label}
             </a>
-
-            <form action={logoutAdmin}>
-              <button className="w-full rounded-full border border-white/10 px-8 py-4 text-center font-black text-white transition hover:bg-white hover:text-black">
-                Logout
-              </button>
-            </form>
-          </div>
-        </div>
-
-        <div className="mt-14 grid gap-5 md:grid-cols-3 lg:grid-cols-6">
-          {stats.map(([label, value]) => (
-            <div
-              key={label}
-              className="rounded-[2rem] border border-white/10 bg-white/[0.04] p-6"
-            >
-              <p className="text-4xl font-black">{value}</p>
-              <p className="mt-2 text-sm text-zinc-500">{label}</p>
-            </div>
           ))}
-        </div>
+        </nav>
 
-        <div className="mt-14 rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
-          <h2 className="text-4xl font-black">Members & subscriptions</h2>
+        <section id="overview" className="mt-8 scroll-mt-28">
+          <SectionHeading title={t.overview} eyebrow="Control center" />
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-6">
+            <Stat label="Total members" value={members.length} />
+            <Stat label="Active members" value={activeMembers.length} />
+            <Stat label="Trial members" value={trialMembers.length} />
+            <Stat label="Canceled members" value={canceledMembers.length} />
+            <Stat label="Total partners" value={partners.length} />
+            <Stat label="Approved partners" value={approvedPartners.length} />
+            <Stat label="Pending partners" value={pendingPartners.length} />
+            <Stat label="Hidden partners" value={hiddenPartners.length} />
+            <Stat label="Rejected partners" value={rejectedPartners.length} />
+            <Stat label="Waiting applications" value={waitingApplications.length} />
+            <Stat
+              label="Partners missing info"
+              value={partnersMissingImportantInfo.length}
+              tone="danger"
+            />
+            <Stat label="Total QR scans" value={usageLogs.length} />
+            <Stat label="Today QR scans" value={todayQrScans.length} />
+            <Stat label="Partner clicks" value={clickEvents.length} />
+            <Stat label="Revenue" value={euro(revenueEstimate)} />
+            <Stat label="MRR" value={euro(mrrEstimate)} />
+            <Stat label="Failed payments" value={failedPayments.length} tone="danger" />
+          </div>
+        </section>
 
-          <div className="mt-8 space-y-4">
-            {memberList.length > 0 ? (
-              memberList.map((member) => (
-                <div
-                  key={member.id}
-                  className="grid gap-4 rounded-[2rem] border border-white/10 bg-black/50 p-5 lg:grid-cols-[1.4fr_1fr_1fr_1fr_auto]"
-                >
-                  <div>
-                    <p className="text-xl font-black">{member.full_name}</p>
-                    <p className="mt-1 text-sm text-zinc-500">
-                      {member.email}
-                    </p>
-                    <p className="mt-1 break-all text-xs text-zinc-700">
-                      {member.pass_code}
-                    </p>
-                  </div>
+        <section id="analytics" className="mt-10 scroll-mt-28">
+          <SectionHeading title={t.analytics} eyebrow="Users, partners, QR, revenue" />
+          <div className="mt-5 grid gap-6 xl:grid-cols-2">
+            <Panel title="User analytics">
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <MiniStat label="New today" value={members.filter((m) => isToday(m.created_at)).length} />
+                <MiniStat label="New 7 days" value={members.filter((m) => isWithin(m.created_at, 7)).length} />
+                <MiniStat label="New month" value={members.filter((m) => isWithin(m.created_at, 30)).length} />
+                <MiniStat label="Active" value={activeMembers.length} />
+                <MiniStat label="Inactive" value={members.length - activeMembers.length} />
+                <MiniStat label="Canceled" value={canceledMembers.length} />
+                <MiniStat label="Trial" value={trialMembers.length} />
+                <MiniStat label="14 days" value={planCounts["14day"]} />
+                <MiniStat label="Monthly" value={planCounts.monthly} />
+                <MiniStat label="6 months" value={planCounts["6months"]} />
+                <MiniStat label="Yearly" value={planCounts.yearly} />
+              </div>
+            </Panel>
 
-                  <div>
-                    <p className="text-sm text-zinc-600">Plan</p>
-                    <p className="mt-1 font-black">{member.plan}</p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-zinc-600">Valid until</p>
-                    <p className="mt-1 font-black">
-                      {formatDate(member.valid_until)}
-                    </p>
-                  </div>
-
-                  <div>
-                    <p className="text-sm text-zinc-600">Status</p>
-                    <span
-                      className={`mt-2 inline-flex rounded-full px-4 py-2 text-sm font-black ${
-                        member.status === "active"
-                          ? "bg-emerald-400/10 text-emerald-300"
-                          : member.status === "past_due"
-                            ? "bg-amber-400/10 text-amber-300"
-                            : "bg-red-400/10 text-red-300"
-                      }`}
-                    >
-                      {member.status}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col gap-2">
-                    <form action={setMemberStatus}>
-                      <input type="hidden" name="id" value={member.id} />
-                      <input type="hidden" name="status" value="active" />
-                      <button className="w-full rounded-full bg-emerald-400 px-4 py-2 text-sm font-black text-black">
-                        Active
-                      </button>
-                    </form>
-
-                    <form action={setMemberStatus}>
-                      <input type="hidden" name="id" value={member.id} />
-                      <input type="hidden" name="status" value="canceled" />
-                      <button className="w-full rounded-full border border-red-400/20 px-4 py-2 text-sm font-black text-red-300">
-                        Cancel
-                      </button>
-                    </form>
-                  </div>
+            <Panel title="Partner analytics">
+              <div className="grid gap-5">
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {categoryStats.map((item) => (
+                    <MiniStat key={item.category} label={item.category} value={item.count} />
+                  ))}
                 </div>
-              ))
-            ) : (
-              <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
-                No members yet.
+
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <MiniStat label="Page views" value={pageViews.length} />
+                  <MiniStat label="Button clicks" value={clickEvents.length} />
+                  <MiniStat label="Maps clicks" value={clickTypeBreakdown.get("maps_click") || 0} />
+                  <MiniStat label="Get pass clicks" value={clickTypeBreakdown.get("get_pass_click") || 0} />
+                </div>
+
+                <AnalyticsList
+                  title="Most popular partners"
+                  items={popularPartners.map((partner) => ({
+                    title: partner.business_name || "Partner",
+                    meta: `${viewCountByPartner.get(partner.id) || 0} views · ${qrCountByPartner.get(partner.id) || 0} QR`,
+                  }))}
+                />
+
+                <AnalyticsList
+                  title="Most clicked partners"
+                  items={[...partners]
+                    .sort(
+                      (a, b) =>
+                        (clickCountByPartner.get(b.id) || 0) -
+                        (clickCountByPartner.get(a.id) || 0)
+                    )
+                    .slice(0, 6)
+                    .map((partner) => ({
+                      title: partner.business_name || "Partner",
+                      meta: `${clickCountByPartner.get(partner.id) || 0} button clicks`,
+                    }))}
+                />
+
+                <AnalyticsList
+                  title="No page views"
+                  items={partnersWithoutViews.slice(0, 6).map((partner) => ({
+                    title: partner.business_name || "Partner",
+                    meta: partner.category || "No category",
+                  }))}
+                />
+
+                <AnalyticsList
+                  title="High views, low QR"
+                  items={highViewsLowQr.slice(0, 6).map((partner) => ({
+                    title: partner.business_name || "Partner",
+                    meta: `${viewCountByPartner.get(partner.id) || 0} views · ${qrCountByPartner.get(partner.id) || 0} QR`,
+                  }))}
+                />
               </div>
-            )}
-          </div>
-        </div>
+            </Panel>
 
-        <div className="mt-14 rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
-          <h2 className="text-4xl font-black">Partner applications</h2>
+            <Panel title="QR analytics">
+              <form className="mb-5 flex flex-wrap gap-2">
+                <select name="qr_range" defaultValue={qrRange} className="input max-w-xs">
+                  <option value="today">today</option>
+                  <option value="7">7 days</option>
+                  <option value="30">30 days</option>
+                  <option value="all">all time</option>
+                </select>
+                <button className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
+                  Filter
+                </button>
+              </form>
 
-          <div className="mt-8 space-y-4">
-            {applicationList.length > 0 ? (
-              applicationList.map((application) => {
-                const partner = partnerByApplicationId.get(application.id);
-                const editLink = partner?.edit_token
-                  ? `/partner-dashboard/${partner.edit_token}`
-                  : null;
-
-                return (
-                  <div
-                    key={application.id}
-                    className="rounded-[2rem] border border-white/10 bg-black/50 p-5"
-                  >
-                    <div className="grid gap-4 md:grid-cols-6 md:items-center">
-                      <div className="md:col-span-2">
-                        <p className="text-xl font-black">
-                          {application.business_name}
-                        </p>
-                        <p className="mt-1 text-sm text-zinc-500">
-                          {application.category}
-                        </p>
-                        <p className="mt-1 text-xs text-zinc-600">
-                          {application.contact_email}
-                        </p>
-                      </div>
-
-                      <div className="text-zinc-300">
-                        {application.offer || "No offer yet"}
-                      </div>
-
-                      <div className="text-sm text-zinc-500">
-                        {application.address || "No address"}
-                      </div>
-
-                      <span
-                        className={`w-fit rounded-full px-4 py-2 text-sm font-black ${
-                          application.status === "approved"
-                            ? "bg-emerald-400/10 text-emerald-300"
-                            : application.status === "rejected"
-                              ? "bg-red-400/10 text-red-300"
-                              : "bg-amber-400/10 text-amber-300"
-                        }`}
-                      >
-                        {application.status}
-                      </span>
-
-                      <div className="flex gap-2 md:justify-end">
-                        <form action={approveApplication}>
-                          <input
-                            type="hidden"
-                            name="id"
-                            value={application.id}
-                          />
-                          <button className="rounded-full bg-white px-4 py-2 text-sm font-black text-black">
-                            Approve
-                          </button>
-                        </form>
-
-                        <form action={rejectApplication}>
-                          <input
-                            type="hidden"
-                            name="id"
-                            value={application.id}
-                          />
-                          <button className="rounded-full border border-white/10 px-4 py-2 text-sm font-black text-white">
-                            Reject
-                          </button>
-                        </form>
-                      </div>
-                    </div>
-
-                    {editLink && (
-                      <div className="mt-5 rounded-2xl border border-white/10 bg-white/[0.04] p-4">
-                        <p className="text-sm font-black text-zinc-400">
-                          Private partner edit link
-                        </p>
-
-                        <a
-                          href={editLink}
-                          className="mt-2 inline-flex break-all text-sm font-bold text-white hover:text-zinc-300"
-                        >
-                          {editLink}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-                );
-              })
-            ) : (
-              <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
-                No applications yet.
+              <div className="mb-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+                {["allowed", "denied", "expired", "already used", "invalid"].map(
+                  (status) => (
+                    <MiniStat
+                      key={status}
+                      label={status}
+                      value={qrStatusBreakdown.get(status) || 0}
+                    />
+                  )
+                )}
               </div>
-            )}
-          </div>
-        </div>
 
-        <div className="mt-14 grid gap-8 lg:grid-cols-2">
-          <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
-            <h2 className="text-4xl font-black">QR usage logs</h2>
-
-            <div className="mt-8 space-y-3">
-              {usageLogs.length > 0 ? (
-                usageLogs.map((log) => (
-                  <div
-                    key={log.id}
-                    className="rounded-2xl border border-white/10 bg-black/40 p-5"
-                  >
-                    <div className="flex justify-between gap-4">
-                      <p
-                        className={`font-black ${
-                          log.result === "active"
-                            ? "text-emerald-300"
-                            : "text-red-300"
-                        }`}
-                      >
-                        {log.result}
+              <div className="grid gap-3">
+                {filteredQrLogs.slice(0, 12).map((log) => (
+                  <div key={log.id} className="rounded-2xl bg-zinc-100 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="rounded-full bg-white px-4 py-2 text-sm font-black">
+                        {qrStatus(log)}
                       </p>
-
-                      <p className="text-sm text-zinc-600">
-                        {formatDate(log.created_at)}
+                      <p className="text-sm font-bold text-zinc-500">
+                        {formatDateTime(log.created_at)}
                       </p>
                     </div>
-
-                    <p className="mt-2 break-all text-xs text-zinc-700">
-                      {log.qr_token || "No token"}
+                    <p className="mt-3 text-sm font-black text-zinc-800">
+                      Partner name:{" "}
+                      {log.partner_id
+                        ? partnerNameById.get(log.partner_id) || "Unknown partner"
+                        : "not linked"}
+                    </p>
+                    <p className="mt-3 text-sm font-bold text-zinc-600">
+                      Partner: {log.partner_id || "not linked"} · Pass:{" "}
+                      {log.pass_code || log.pass_id || log.member_id || "n/a"}
+                    </p>
+                    <p className="mt-1 line-clamp-1 text-xs font-bold text-zinc-400">
+                      Device: {log.user_agent || "not tracked yet"}
                     </p>
                   </div>
-                ))
-              ) : (
-                <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
-                  No QR logs yet.
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="rounded-[3rem] border border-white/10 bg-white/[0.04] p-6 md:p-8">
-            <h2 className="text-4xl font-black">Waitlist</h2>
-
-            <div className="mt-8 space-y-3">
-              {waitlistMembers.slice(0, 10).map((member) => (
-                <div
-                  key={member.id}
-                  className="rounded-2xl border border-white/10 bg-black/40 p-5"
-                >
-                  <p className="font-black">{member.name}</p>
-                  <p className="text-sm text-zinc-500">{member.email}</p>
-                  <p className="mt-2 text-sm text-zinc-600">
-                    {member.interest || "Everything"}
+                ))}
+                {filteredQrLogs.length === 0 && (
+                  <p className="rounded-2xl bg-zinc-100 p-5 font-bold text-zinc-500">
+                    No QR logs for this period.
                   </p>
+                )}
+              </div>
+            </Panel>
+
+            <Panel title="Revenue analytics">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <MiniStat label="Total revenue" value={euro(revenueEstimate)} />
+                <MiniStat label="Today revenue" value="Stripe webhook" />
+                <MiniStat label="Month revenue" value="Stripe webhook" />
+                <MiniStat label="MRR forecast" value={euro(mrrEstimate)} />
+                <MiniStat label="Failed payments" value={failedPayments.length} />
+                <MiniStat label="Refunds" value="Stripe webhook" />
+                <MiniStat
+                  label="Avg revenue/user"
+                  value={activeRevenueMembers.length ? euro(revenueEstimate / activeRevenueMembers.length) : euro(0)}
+                />
+                <MiniStat label="Canceled subs" value={canceledMembers.length} />
+              </div>
+              <p className="mt-5 rounded-2xl bg-amber-50 p-4 text-sm font-bold leading-6 text-amber-800">
+                Accurate revenue analytics needs Stripe webhook events for paid
+                invoices, refunds, cancellations and failed payments.
+              </p>
+            </Panel>
+          </div>
+        </section>
+
+        <section id="members" className="mt-10 scroll-mt-28">
+          <SectionHeading title={t.members} eyebrow="Search, status, pass access" />
+          <Panel>
+            <FilterForm>
+              <input
+                name="member_search"
+                defaultValue={params.member_search || ""}
+                placeholder={`${t.search}: email / pass code`}
+                className="input"
+              />
+              <select name="member_status" defaultValue={memberStatusFilter} className="input">
+                <option value="all">all statuses</option>
+                {memberStatuses.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </FilterForm>
+
+            <div className="mt-6 grid gap-4">
+              {filteredMembers.map((member) => (
+                <div key={member.id} className="rounded-[1.6rem] bg-zinc-100 p-5">
+                  <div className="grid gap-5 xl:grid-cols-[1fr_520px]">
+                    <div>
+                      <div className="flex flex-wrap items-center gap-3">
+                        <h3 className="text-xl font-black">
+                          {member.full_name || member.email || "Member"}
+                        </h3>
+                        <Badge>{memberStatus(member)}</Badge>
+                      </div>
+                      <p className="mt-2 text-sm font-bold text-zinc-500">
+                        {member.email || "No email"} · {member.plan_id || member.plan || "no plan"}
+                      </p>
+                      <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <Info label="Registered" value={formatDate(member.created_at)} />
+                        <Info label="Valid until" value={formatDate(member.valid_until || member.current_period_end)} />
+                        <Info label="Device" value={member.device_hash ? "linked" : "not linked"} />
+                        <Info label="Payment" value={member.last_payment_status || "n/a"} />
+                      </div>
+                      {member.pass_code && (
+                        <div className="mt-4 flex flex-wrap items-center gap-3">
+                          <code className="rounded-full bg-white px-4 py-3 text-sm font-black">
+                            {member.pass_code}
+                          </code>
+                          <CopyButton
+                            value={member.pass_code}
+                            label="Copy pass code"
+                            copiedLabel={t.copied}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 xl:justify-end">
+                      <form action={updateMemberStatus} className="flex gap-2">
+                        <input type="hidden" name="member_id" value={member.id} />
+                        <input type="hidden" name="member_table" value={memberTable} />
+                        <select
+                          name="subscription_status"
+                          defaultValue={memberStatus(member)}
+                          className="rounded-full bg-white px-4 py-3 text-sm font-black"
+                        >
+                          {memberStatuses.map((status) => (
+                            <option key={status} value={status}>
+                              {status}
+                            </option>
+                          ))}
+                        </select>
+                        <button className="rounded-full bg-black px-4 py-3 text-sm font-black text-white">
+                          {t.save}
+                        </button>
+                      </form>
+
+                      <form action={resetDeviceLock}>
+                        <input type="hidden" name="member_id" value={member.id} />
+                        <input type="hidden" name="member_table" value={memberTable} />
+                        <button className="rounded-full bg-white px-4 py-3 text-sm font-black">
+                          Reset device lock
+                        </button>
+                      </form>
+
+                      {member.pass_code && (
+                        <a
+                          href={`/account/start/${member.pass_code}`}
+                          target="_blank"
+                          className="rounded-full bg-white px-4 py-3 text-sm font-black"
+                        >
+                          Open pass
+                        </a>
+                      )}
+                    </div>
+                  </div>
                 </div>
               ))}
-
-              {waitlistMembers.length === 0 && (
-                <div className="rounded-[2rem] border border-white/10 bg-black/40 p-8 text-center text-zinc-500">
-                  No waitlist members.
-                </div>
-              )}
+              {filteredMembers.length === 0 && <EmptyState text="No members found." />}
             </div>
+          </Panel>
+        </section>
+
+        <section id="partners" className="mt-10 scroll-mt-28">
+          <SectionHeading title={t.partners} eyebrow="Directory, quality, dashboard links" />
+          <div className="grid gap-6 xl:grid-cols-[1fr_420px]">
+            <Panel>
+              <FilterForm>
+                <input
+                  name="partner_search"
+                  defaultValue={params.partner_search || ""}
+                  placeholder={`${t.search}: partner`}
+                  className="input"
+                />
+                <select name="partner_status" defaultValue={partnerStatusFilter} className="input">
+                  <option value="all">all statuses</option>
+                  {partnerStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+                <select name="partner_category" defaultValue={partnerCategoryFilter} className="input">
+                  <option value="all">all categories</option>
+                  {partnerCategories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+              </FilterForm>
+
+              <div className="mt-6 grid gap-4">
+                {filteredPartners.map((partner) => {
+                  const publicUrl = publicPartnerUrl(partner);
+                  const dashboardUrl = partnerDashboardUrl(partner);
+                  const absoluteDashboardUrl = dashboardUrl ? `${baseUrl}${dashboardUrl}` : "";
+                  const checklist = [
+                    ["photo", Boolean(partner.image_url)],
+                    ["address", Boolean(partner.address)],
+                    ["offer", Boolean(partner.offer)],
+                    ["hours", Boolean(partner.opening_hours)],
+                    ["phone", Boolean(partner.phone)],
+                    ["website", Boolean(partner.website)],
+                    ["instagram", Boolean(partner.instagram)],
+                    ["menu", (menuCountByPartner.get(partner.id) || 0) > 0],
+                  ];
+
+                  return (
+                    <div key={partner.id} className="rounded-[1.6rem] bg-zinc-100 p-5">
+                      <div className="grid gap-5 xl:grid-cols-[1fr_520px]">
+                        <div>
+                          <div className="flex flex-wrap items-center gap-3">
+                            <h3 className="text-xl font-black">
+                              {partner.business_name || "Partner"}
+                            </h3>
+                            <Badge>{partner.status || "unknown"}</Badge>
+                          </div>
+                          <p className="mt-2 text-sm font-bold text-zinc-500">
+                            {partner.category || "No category"} · {partner.address || "No address"}
+                          </p>
+                          {partner.offer && (
+                            <p className="mt-3 rounded-2xl bg-white p-4 text-sm font-black text-zinc-700">
+                              {partner.offer}
+                            </p>
+                          )}
+                          <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                            <Info label="Menu items" value={String(menuCountByPartner.get(partner.id) || 0)} />
+                            <Info label="QR uses" value={String(qrCountByPartner.get(partner.id) || 0)} />
+                            <Info label="Views" value={String(viewCountByPartner.get(partner.id) || 0)} />
+                          </div>
+                          <div className="mt-4 flex flex-wrap gap-2">
+                            {checklist.map(([label, ok]) => (
+                              <span
+                                key={String(label)}
+                                className={`rounded-full px-3 py-2 text-xs font-black ${
+                                  ok ? "bg-emerald-100 text-emerald-800" : "bg-white text-zinc-400"
+                                }`}
+                              >
+                                {ok ? "✓" : "!"} {label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-2 xl:justify-end">
+                          <form action={updatePartnerStatus} className="flex gap-2">
+                            <input type="hidden" name="partner_id" value={partner.id} />
+                            <select
+                              name="status"
+                              defaultValue={partner.status || "pending"}
+                              className="rounded-full bg-white px-4 py-3 text-sm font-black"
+                            >
+                              {partnerStatuses.map((status) => (
+                                <option key={status} value={status}>
+                                  {status}
+                                </option>
+                              ))}
+                            </select>
+                            <button className="rounded-full bg-black px-4 py-3 text-sm font-black text-white">
+                              {t.save}
+                            </button>
+                          </form>
+
+                          <a
+                            href={publicUrl}
+                            target="_blank"
+                            className="rounded-full bg-white px-4 py-3 text-sm font-black"
+                          >
+                            {t.public}
+                          </a>
+
+                          {dashboardUrl && (
+                            <a
+                              href={dashboardUrl}
+                              target="_blank"
+                              className="rounded-full bg-white px-4 py-3 text-sm font-black"
+                            >
+                              {t.dashboard}
+                            </a>
+                          )}
+
+                          {absoluteDashboardUrl && (
+                            <CopyButton
+                              value={absoluteDashboardUrl}
+                              label="Copy dashboard link"
+                              copiedLabel={t.copied}
+                              className="rounded-full bg-white px-4 py-3 text-sm font-black text-black"
+                            />
+                          )}
+
+                          <form action={regeneratePartnerToken}>
+                            <input type="hidden" name="partner_id" value={partner.id} />
+                            <button className="rounded-full bg-white px-4 py-3 text-sm font-black">
+                              New dashboard link
+                            </button>
+                          </form>
+
+                          <form action={deletePartner}>
+                            <input type="hidden" name="partner_id" value={partner.id} />
+                            <button className="rounded-full bg-red-50 px-4 py-3 text-sm font-black text-red-600">
+                              {t.delete}
+                            </button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {filteredPartners.length === 0 && <EmptyState text="No partners found." />}
+              </div>
+            </Panel>
+
+            <Panel title={t.addPartner}>
+              <form action={createPartner} className="grid gap-3">
+                <input name="business_name" placeholder="Business name" className="input" required />
+                <input name="slug" placeholder="slug-example" className="input" />
+                <select name="category" className="input" defaultValue="restaurants">
+                  {partnerCategories.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
+                </select>
+                <input name="address" placeholder="Address" className="input" />
+                <input name="offer" placeholder="Offer" className="input" />
+                <select name="status" className="input" defaultValue="approved">
+                  {partnerStatuses.map((status) => (
+                    <option key={status} value={status}>
+                      {status}
+                    </option>
+                  ))}
+                </select>
+                <button className="rounded-full bg-black px-6 py-4 font-black text-white">
+                  Create partner
+                </button>
+              </form>
+            </Panel>
           </div>
-        </div>
+        </section>
+
+        <section id="applications" className="mt-10 scroll-mt-28">
+          <SectionHeading title={t.applications} eyebrow="Partner requests" />
+          <Panel>
+            <div className="grid gap-4 lg:grid-cols-2">
+              {applications.map((application) => {
+                const email = application.email || application.contact_email || "";
+                const message = application.message || application.description || "";
+
+                return (
+                  <div key={application.id} className="rounded-[1.6rem] bg-zinc-100 p-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <h3 className="text-xl font-black">
+                        {application.business_name || "Application"}
+                      </h3>
+                      <Badge>{application.status || "pending"}</Badge>
+                    </div>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <Info label="Contact" value={application.contact_name || application.name || "n/a"} />
+                      <Info label="Email" value={email || "n/a"} />
+                      <Info label="Phone" value={application.phone || "n/a"} />
+                      <Info label="Category" value={application.category || "n/a"} />
+                      <Info label="Address" value={application.address || "n/a"} />
+                      <Info label="Date" value={formatDate(application.created_at)} />
+                    </div>
+                    {message && (
+                      <p className="mt-4 rounded-2xl bg-white p-4 text-sm leading-6 text-zinc-600">
+                        {message}
+                      </p>
+                    )}
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <form action={approveApplication}>
+                        <input type="hidden" name="application_id" value={application.id} />
+                        <button className="rounded-full bg-black px-4 py-3 text-sm font-black text-white">
+                          {t.approve}
+                        </button>
+                      </form>
+
+                      <form action={rejectApplication}>
+                        <input type="hidden" name="application_id" value={application.id} />
+                        <button className="rounded-full bg-white px-4 py-3 text-sm font-black text-black">
+                          {t.reject}
+                        </button>
+                      </form>
+
+                      {email && (
+                        <a
+                          href={`mailto:${email}`}
+                          className="rounded-full bg-white px-4 py-3 text-sm font-black text-black"
+                        >
+                          Email partner
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+              {applications.length === 0 && <EmptyState text="No applications yet." />}
+            </div>
+          </Panel>
+        </section>
+
+        <section id="settings" className="mt-10 scroll-mt-28">
+          <SectionHeading title={t.siteSettings} eyebrow="Website controls" />
+          <Panel>
+            <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {siteSettingKeys.map((key) => {
+                const booleanSetting = [
+                  "partner_applications_enabled",
+                  "enable_partner_applications",
+                  "stripe_payments_enabled",
+                  "maintenance_mode",
+                ].includes(key);
+
+                return (
+                  <form key={key} action={updateSiteSetting} className="grid gap-2 rounded-2xl bg-zinc-100 p-4">
+                    <input type="hidden" name="key" value={key} />
+                    <label className="text-sm font-black text-zinc-500">{key}</label>
+                    {booleanSetting ? (
+                      <select name="value" defaultValue={settingMap.get(key) || "false"} className="input">
+                        <option value="true">enabled</option>
+                        <option value="false">disabled</option>
+                      </select>
+                    ) : key === "hero_subtitle" || key === "membership_price_texts" || key === "announcement_banner" ? (
+                      <textarea
+                        name="value"
+                        defaultValue={settingMap.get(key) || ""}
+                        className="input min-h-28"
+                      />
+                    ) : (
+                      <input name="value" defaultValue={settingMap.get(key) || ""} className="input" />
+                    )}
+                    <button className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
+                      {t.save}
+                    </button>
+                  </form>
+                );
+              })}
+            </div>
+          </Panel>
+        </section>
       </section>
+
+      <style>{`
+        .input {
+          width: 100%;
+          border-radius: 1rem;
+          border: 1px solid rgba(0, 0, 0, 0.1);
+          background: white;
+          padding: 0.9rem 1rem;
+          font-weight: 800;
+          outline: none;
+        }
+
+        .input:focus {
+          border-color: rgba(0, 0, 0, 0.32);
+        }
+      `}</style>
     </main>
+  );
+}
+
+function SectionHeading({ title, eyebrow }: { title: string; eyebrow: string }) {
+  return (
+    <div>
+      <p className="text-sm font-black uppercase tracking-[0.25em] text-zinc-400">
+        {eyebrow}
+      </p>
+      <h2 className="mt-2 text-4xl font-black tracking-tight md:text-5xl">
+        {title}
+      </h2>
+    </div>
+  );
+}
+
+function Stat({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: number | string;
+  tone?: "neutral" | "danger";
+}) {
+  return (
+    <div
+      className={`rounded-[1.6rem] bg-white p-5 shadow-sm ring-1 ring-black/5 ${
+        tone === "danger" ? "text-red-600" : ""
+      }`}
+    >
+      <p className="text-xs font-black uppercase tracking-[0.2em] text-zinc-400">
+        {label}
+      </p>
+      <p className="mt-3 text-4xl font-black">{value}</p>
+    </div>
+  );
+}
+
+function MiniStat({ label, value }: { label: string; value: number | string }) {
+  return (
+    <div className="rounded-2xl bg-zinc-100 p-4">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-400">
+        {label}
+      </p>
+      <p className="mt-2 text-2xl font-black">{value}</p>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  children,
+}: {
+  title?: string;
+  children: ReactNode;
+}) {
+  return (
+    <section className="rounded-[2rem] bg-white p-6 shadow-sm ring-1 ring-black/5">
+      {title && <h2 className="mb-6 text-3xl font-black tracking-tight">{title}</h2>}
+      {children}
+    </section>
+  );
+}
+
+function FilterForm({ children }: { children: ReactNode }) {
+  return (
+    <form className="grid gap-3 lg:grid-cols-[1fr_220px_220px_auto]">
+      {children}
+      <button className="rounded-full bg-black px-5 py-3 text-sm font-black text-white">
+        Filter
+      </button>
+    </form>
+  );
+}
+
+function Badge({ children }: { children: ReactNode }) {
+  return (
+    <span className="rounded-full bg-white px-4 py-2 text-xs font-black uppercase tracking-[0.16em] text-zinc-700">
+      {children}
+    </span>
+  );
+}
+
+function Info({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white p-4">
+      <p className="text-xs font-black uppercase tracking-[0.18em] text-zinc-400">
+        {label}
+      </p>
+      <p className="mt-2 break-words text-sm font-black text-zinc-800">{value}</p>
+    </div>
+  );
+}
+
+function AnalyticsList({
+  title,
+  items,
+}: {
+  title: string;
+  items: { title: string; meta: string }[];
+}) {
+  return (
+    <div>
+      <h3 className="mb-3 text-xl font-black">{title}</h3>
+      <div className="grid gap-2">
+        {items.length > 0 ? (
+          items.map((item) => (
+            <div key={`${item.title}-${item.meta}`} className="rounded-2xl bg-zinc-100 p-4">
+              <p className="font-black">{item.title}</p>
+              <p className="mt-1 text-sm font-bold text-zinc-500">{item.meta}</p>
+            </div>
+          ))
+        ) : (
+          <p className="rounded-2xl bg-zinc-100 p-4 text-sm font-bold text-zinc-500">
+            No data yet.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function EmptyState({ text }: { text: string }) {
+  return (
+    <div className="rounded-[1.6rem] bg-zinc-100 p-8 text-center font-black text-zinc-500">
+      {text}
+    </div>
   );
 }

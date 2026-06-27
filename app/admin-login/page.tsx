@@ -6,24 +6,23 @@ async function loginAdmin(formData: FormData) {
 
   const password = String(formData.get("password") || "");
 
-  const adminPassword = process.env.ADMIN_PASSWORD;
-  const adminSecret = process.env.ADMIN_SESSION_SECRET;
-
-  if (!adminPassword) {
-    throw new Error("Missing ADMIN_PASSWORD");
-  }
+  const adminSecret =
+    process.env.ADMIN_SECRET ||
+    process.env.ADMIN_PASSWORD ||
+    process.env.TLN_ADMIN_SECRET ||
+    "";
 
   if (!adminSecret) {
-    throw new Error("Missing ADMIN_SESSION_SECRET");
+    throw new Error("Missing ADMIN_SECRET");
   }
 
-  if (password !== adminPassword) {
+  if (password !== adminSecret) {
     redirect("/admin-login");
   }
 
   const cookieStore = await cookies();
 
-  cookieStore.set("tln_admin", adminSecret, {
+  cookieStore.set("tln_admin_secret", adminSecret, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

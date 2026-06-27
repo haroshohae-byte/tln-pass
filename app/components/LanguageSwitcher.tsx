@@ -1,14 +1,19 @@
 "use client";
 
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { languages, type Lang } from "../../lib/i18n";
+import { setLanguage } from "./languageActions";
 
 export default function LanguageSwitcher({ currentLang }: { currentLang: Lang }) {
   const router = useRouter();
+  const [pending, startTransition] = useTransition();
 
   function changeLanguage(lang: Lang) {
-    document.cookie = `tln_lang=${lang}; path=/; max-age=31536000; SameSite=Lax`;
-    router.refresh();
+    startTransition(async () => {
+      await setLanguage(lang);
+      router.refresh();
+    });
   }
 
   return (
@@ -17,6 +22,7 @@ export default function LanguageSwitcher({ currentLang }: { currentLang: Lang })
         <button
           key={language.code}
           type="button"
+          disabled={pending}
           onClick={() => changeLanguage(language.code)}
           className={`rounded-full px-3 py-2 text-xs font-black transition ${
             currentLang === language.code

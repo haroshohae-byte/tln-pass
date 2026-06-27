@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { normalizeLang } from "../../lib/i18n";
 
@@ -91,7 +92,7 @@ export default async function MyPassPage() {
 
           <div className="grid gap-5 p-5 md:grid-cols-3 md:p-7">
             {savedPassCode ? (
-              <a
+              <Link
                 href={`/account/start/${savedPassCode}`}
                 className="rounded-[2rem] bg-[#1d1d1f] p-7 text-white transition hover:-translate-y-1"
               >
@@ -102,7 +103,7 @@ export default async function MyPassPage() {
                 <h2 className="mt-12 text-3xl font-black tracking-tight">
                   {t.saved}
                 </h2>
-              </a>
+              </Link>
             ) : (
               <div className="rounded-[2rem] bg-zinc-100 p-7 text-zinc-500">
                 <p className="text-sm font-black uppercase tracking-[0.22em] text-zinc-400">
@@ -115,7 +116,7 @@ export default async function MyPassPage() {
               </div>
             )}
 
-            <a
+            <Link
               href="/membership"
               className="rounded-[2rem] bg-[#e8f3ff] p-7 text-[#0b3b75] transition hover:-translate-y-1"
             >
@@ -126,7 +127,7 @@ export default async function MyPassPage() {
               <h2 className="mt-12 text-3xl font-black tracking-tight">
                 {t.join}
               </h2>
-            </a>
+            </Link>
 
             <div className="rounded-[2rem] bg-[#fff3df] p-7 text-[#7a3f00]">
               <p className="text-sm font-black uppercase tracking-[0.22em] opacity-50">

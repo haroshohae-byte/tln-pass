@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import LanguageSwitcher from "./LanguageSwitcher";
 import type { Lang } from "../../lib/i18n";
 
@@ -23,6 +24,8 @@ export default function MobileMenu({
   currentLang: Lang;
 }) {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  const isAdmin = pathname?.startsWith("/admin");
 
   return (
     <div className="lg:hidden">
@@ -70,12 +73,14 @@ export default function MobileMenu({
             <div className="mt-6 flex items-center justify-between gap-4">
               <LanguageSwitcher currentLang={currentLang} />
 
-              <a
-                href="/join"
-                className="rounded-full bg-white px-6 py-3 text-sm font-black text-black"
-              >
-                {joinLabel}
-              </a>
+              {!isAdmin && (
+                <a
+                  href="/join"
+                  className="rounded-full bg-white px-6 py-3 text-sm font-black text-black"
+                >
+                  {joinLabel}
+                </a>
+              )}
             </div>
           </div>
         </div>

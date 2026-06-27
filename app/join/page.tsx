@@ -2,6 +2,7 @@ import { cookies, headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { dictionary, normalizeLang } from "../../lib/i18n";
 import { getPlanById, getStripePriceId } from "../../lib/plans";
+import { getSiteSettings } from "../../lib/siteSettings";
 import { stripe } from "../../lib/stripe";
 
 async function getBaseUrl() {
@@ -29,6 +30,12 @@ async function getBaseUrl() {
 
 async function startCheckout(formData: FormData) {
   "use server";
+
+  const settings = await getSiteSettings();
+
+  if (settings.stripePaymentsEnabled === "false") {
+    throw new Error("Stripe payments are currently disabled");
+  }
 
   const fullName = String(formData.get("full_name") || "").trim();
   const email = String(formData.get("email") || "").trim();
@@ -85,6 +92,8 @@ export default async function JoinPage({
   const cookieStore = await cookies();
   const lang = normalizeLang(cookieStore.get("tln_lang")?.value);
   const t = dictionary[lang].join;
+  const settings = await getSiteSettings();
+  const paymentsDisabled = settings.stripePaymentsEnabled === "false";
 
   const { plan: planParam } = await searchParams;
   const plan = getPlanById(planParam);
@@ -136,6 +145,11 @@ export default async function JoinPage({
             <p className="mt-6 leading-7 text-zinc-400">{plan.note}</p>
           </div>
 
+          {paymentsDisabled ? (
+            <div className="mt-6 rounded-[2rem] bg-zinc-100 p-6 text-center font-black text-zinc-600">
+              Stripe payments are currently disabled.
+            </div>
+          ) : (
           <form action={startCheckout} className="mt-6 space-y-4">
             <input type="hidden" name="plan" value={plan.id} />
 
@@ -162,6 +176,7 @@ export default async function JoinPage({
               {t.button}
             </button>
           </form>
+          )}
 
           <p className="mt-5 text-center text-xs font-bold text-zinc-500">
             {t.stripe}
